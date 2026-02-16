@@ -78,6 +78,12 @@ function resolveRef(ref: string, uuidMap?: Map<string, string>): string {
   return `${type}:${uuid}${suffix}`;
 }
 
+export interface FgaContextualTuple {
+  user: string;
+  relation: string;
+  object: string;
+}
+
 export interface FgaCheckParams {
   objectType: string;
   objectId: string;
@@ -85,6 +91,7 @@ export interface FgaCheckParams {
   subjectType: string;
   subjectId: string;
   context?: Record<string, unknown>;
+  contextualTuples?: FgaContextualTuple[];
 }
 
 export async function fgaCheck(
@@ -100,6 +107,7 @@ export async function fgaCheck(
         relation: params.relation,
         object: `${params.objectType}:${params.objectId}`,
         context: params.context,
+        contextualTuples: params.contextualTuples,
       },
       { authorizationModelId },
     );

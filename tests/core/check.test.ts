@@ -747,6 +747,89 @@ describe("check algorithm", () => {
     });
   });
 
+  describe("Contextual tuples", () => {
+    test("finds direct match from contextual tuple", async () => {
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "viewer",
+          subjectType: "user",
+          subjectId: "alice",
+          contextualTuples: [
+            {
+              objectType: "doc",
+              objectId: "1",
+              relation: "viewer",
+              subjectType: "user",
+              subjectId: "alice",
+            },
+          ],
+        }),
+      ).toBe(true);
+    });
+
+    test("finds userset from contextual tuple", async () => {
+      store.relationConfigs.push(
+        makeConfig({
+          objectType: "team",
+          relation: "member",
+          directlyAssignableTypes: ["user"],
+        }),
+      );
+      store.tuples.push(
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "viewer",
+          subjectType: "team",
+          subjectId: "writers",
+          subjectRelation: "member",
+        }),
+      );
+
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "viewer",
+          subjectType: "user",
+          subjectId: "alice",
+          contextualTuples: [
+            {
+              objectType: "team",
+              objectId: "writers",
+              relation: "member",
+              subjectType: "user",
+              subjectId: "alice",
+            },
+          ],
+        }),
+      ).toBe(true);
+    });
+
+    test("returns false when contextual tuple does not match", async () => {
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "viewer",
+          subjectType: "user",
+          subjectId: "alice",
+          contextualTuples: [
+            {
+              objectType: "doc",
+              objectId: "1",
+              relation: "editor",
+              subjectType: "user",
+              subjectId: "alice",
+            },
+          ],
+        }),
+      ).toBe(false);
+    });
+  });
+
   describe("Max depth protection", () => {
     test("returns false when max depth exceeded", async () => {
       // Create circular implied_by

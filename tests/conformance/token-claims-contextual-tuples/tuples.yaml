@@ -1,0 +1,6 @@
+- user: group:marketing#member
+  relation: viewer
+  object: document:product_launch
+- user: group:everyone#member
+  relation: viewer
+  object: document:welcome

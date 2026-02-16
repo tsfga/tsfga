@@ -1,4 +1,5 @@
 import { evaluateTupleCondition } from "src/core/conditions.ts";
+import { ContextualTupleStore } from "src/core/contextual-store.ts";
 import type {
   CheckOptions,
   CheckRequest,
@@ -28,6 +29,11 @@ export async function check(
   // Prevent infinite recursion
   if (depth > maxDepth) {
     return false;
+  }
+
+  // Wrap store with contextual tuples at depth 0 only
+  if (depth === 0 && request.contextualTuples?.length) {
+    store = new ContextualTupleStore(store, request.contextualTuples);
   }
 
   // Fetch relation config once for use across all steps

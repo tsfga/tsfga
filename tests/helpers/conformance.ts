@@ -14,6 +14,14 @@ export async function expectConformance(
   params: CheckRequest,
   expected: boolean,
 ): Promise<void> {
+  const contextualTuples = params.contextualTuples?.map((t) => ({
+    user: t.subjectRelation
+      ? `${t.subjectType}:${t.subjectId}#${t.subjectRelation}`
+      : `${t.subjectType}:${t.subjectId}`,
+    relation: t.relation,
+    object: `${t.objectType}:${t.objectId}`,
+  }));
+
   const [tsfgaResult, openFgaResult] = await Promise.all([
     tsfgaClient.check(params),
     fgaCheck(storeId, authorizationModelId, {
@@ -23,6 +31,7 @@ export async function expectConformance(
       subjectType: params.subjectType,
       subjectId: params.subjectId,
       context: params.context,
+      contextualTuples,
     }),
   ]);
 

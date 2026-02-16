@@ -1,0 +1,241 @@
+import { afterAll, beforeAll, describe, test } from "bun:test";
+import type { Kysely } from "kysely";
+import { createTsfga, type TsfgaClient } from "src/index.ts";
+import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
+import type { DB } from "src/store/kysely/schema.ts";
+import { expectConformance } from "tests/helpers/conformance.ts";
+import {
+  beginTransaction,
+  destroyDb,
+  getDb,
+  rollbackTransaction,
+} from "tests/helpers/db.ts";
+import {
+  fgaCreateStore,
+  fgaWriteModel,
+  fgaWriteTuples,
+} from "tests/helpers/openfga.ts";
+
+// Ref: https://openfga.dev/docs/modeling/token-claims-contextual-tuples
+
+const uuidMap = new Map<string, string>([
+  ["alice", "00000000-0000-4000-b800-000000000001"],
+  ["bob", "00000000-0000-4000-b800-000000000002"],
+  ["marketing", "00000000-0000-4000-b800-000000000003"],
+  ["everyone", "00000000-0000-4000-b800-000000000004"],
+  ["product_launch", "00000000-0000-4000-b800-000000000005"],
+  ["welcome", "00000000-0000-4000-b800-000000000006"],
+]);
+
+function uuid(name: string): string {
+  const id = uuidMap.get(name);
+  if (!id) throw new Error(`No UUID for ${name}`);
+  return id;
+}
+
+describe("Token Claims Contextual Tuples Conformance", () => {
+  let db: Kysely<DB>;
+  let storeId: string;
+  let authorizationModelId: string;
+  let tsfgaClient: TsfgaClient;
+
+  beforeAll(async () => {
+    db = getDb();
+    await beginTransaction(db);
+
+    const store = new KyselyTupleStore(db);
+    tsfgaClient = createTsfga(store);
+
+    // Write relation configs
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group",
+      relation: "member",
+      directlyAssignableTypes: ["user"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "document",
+      relation: "viewer",
+      directlyAssignableTypes: ["group"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+
+    // Write stored tuples (group membership is contextual, not stored)
+    await tsfgaClient.addTuple({
+      objectType: "document",
+      objectId: uuid("product_launch"),
+      relation: "viewer",
+      subjectType: "group",
+      subjectId: uuid("marketing"),
+      subjectRelation: "member",
+    });
+    await tsfgaClient.addTuple({
+      objectType: "document",
+      objectId: uuid("welcome"),
+      relation: "viewer",
+      subjectType: "group",
+      subjectId: uuid("everyone"),
+      subjectRelation: "member",
+    });
+
+    // Setup OpenFGA
+    storeId = await fgaCreateStore("token-claims-conformance");
+    authorizationModelId = await fgaWriteModel(
+      storeId,
+      "tests/conformance/token-claims-contextual-tuples/model.dsl",
+    );
+    await fgaWriteTuples(
+      storeId,
+      "tests/conformance/token-claims-contextual-tuples/tuples.yaml",
+      authorizationModelId,
+      uuidMap,
+    );
+  });
+
+  afterAll(async () => {
+    await rollbackTransaction(db);
+    await destroyDb();
+  });
+
+  test("1: alice can view product_launch (contextual: alice in marketing)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("product_launch"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        contextualTuples: [
+          {
+            objectType: "group",
+            objectId: uuid("marketing"),
+            relation: "member",
+            subjectType: "user",
+            subjectId: uuid("alice"),
+          },
+        ],
+      },
+      true,
+    );
+  });
+
+  test("2: alice can view welcome (contextual: alice in everyone)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("welcome"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        contextualTuples: [
+          {
+            objectType: "group",
+            objectId: uuid("everyone"),
+            relation: "member",
+            subjectType: "user",
+            subjectId: uuid("alice"),
+          },
+        ],
+      },
+      true,
+    );
+  });
+
+  test("3: bob cannot view product_launch (contextual: bob in everyone only)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("product_launch"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+        contextualTuples: [
+          {
+            objectType: "group",
+            objectId: uuid("everyone"),
+            relation: "member",
+            subjectType: "user",
+            subjectId: uuid("bob"),
+          },
+        ],
+      },
+      false,
+    );
+  });
+
+  test("4: bob can view welcome (contextual: bob in everyone)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("welcome"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+        contextualTuples: [
+          {
+            objectType: "group",
+            objectId: uuid("everyone"),
+            relation: "member",
+            subjectType: "user",
+            subjectId: uuid("bob"),
+          },
+        ],
+      },
+      true,
+    );
+  });
+
+  test("5: alice cannot view product_launch (no contextual tuples)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("product_launch"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      false,
+    );
+  });
+
+  test("6: bob cannot view welcome (no contextual tuples)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("welcome"),
+        relation: "viewer",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      false,
+    );
+  });
+});

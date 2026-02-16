@@ -54,6 +54,7 @@ export interface CheckRequest {
   subjectType: string;
   subjectId: string;
   context?: Record<string, unknown>;
+  contextualTuples?: AddTupleRequest[];
 }
 
 /** Options for the check algorithm */
