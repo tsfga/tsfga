@@ -12,28 +12,31 @@ import type { DB } from "src/store/kysely/schema.ts";
 
 async function waitForPostgres(maxRetries = 30): Promise<void> {
   const pool = new pg.Pool({
-    host: process.env.POSTGRES_HOST || "localhost",
-    port: Number(process.env.POSTGRES_PORT || 5432),
-    user: process.env.POSTGRES_USER || "dev",
-    password: process.env.POSTGRES_PASSWORD || "password",
-    database: process.env.POSTGRES_DB || "dev",
+    host: process.env.POSTGRES_HOST,
+    port: Number(process.env.POSTGRES_PORT),
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
   });
+
+  let lastError: Error | null = null;
 
   for (let i = 0; i < maxRetries; i++) {
     try {
       await pool.query("SELECT 1");
       await pool.end();
       return;
-    } catch {
+    } catch (error) {
+      lastError = error as Error;
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
   await pool.end();
-  throw new Error("PostgreSQL not ready after retries");
+  throw new Error("PostgreSQL not ready after retries", { cause: lastError });
 }
 
 async function waitForOpenFGA(maxRetries = 30): Promise<void> {
-  const url = process.env.FGA_API_URL || "http://localhost:8080";
+  const url = process.env.FGA_API_URL;
   for (let i = 0; i < maxRetries; i++) {
     try {
       const resp = await fetch(`${url}/stores`);
@@ -48,11 +51,11 @@ async function waitForOpenFGA(maxRetries = 30): Promise<void> {
 
 async function runMigrations(): Promise<void> {
   const pool = new pg.Pool({
-    host: process.env.POSTGRES_HOST || "localhost",
-    port: Number(process.env.POSTGRES_PORT || 5432),
-    user: process.env.POSTGRES_USER || "dev",
-    password: process.env.POSTGRES_PASSWORD || "password",
-    database: process.env.POSTGRES_DB || "dev",
+    host: process.env.POSTGRES_HOST,
+    port: Number(process.env.POSTGRES_PORT),
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
   });
 
   const db = new Kysely<DB>({

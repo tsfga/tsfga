@@ -3,7 +3,7 @@ import { OpenFgaClient } from "@openfga/sdk";
 import { transformer } from "@openfga/syntax-transformer";
 import { parse as parseYaml } from "yaml";
 
-const apiUrl = process.env.FGA_API_URL || "http://localhost:8080";
+const apiUrl = process.env.FGA_API_URL;
 
 function createClient(storeId?: string): OpenFgaClient {
   return new OpenFgaClient({

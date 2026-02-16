@@ -8,11 +8,11 @@ let _pool: pg.Pool | null = null;
 export function getDb(): Kysely<DB> {
   if (!_db) {
     _pool = new pg.Pool({
-      host: process.env.POSTGRES_HOST || "localhost",
-      port: Number(process.env.POSTGRES_PORT || 5432),
-      user: process.env.POSTGRES_USER || "dev",
-      password: process.env.POSTGRES_PASSWORD || "password",
-      database: process.env.POSTGRES_DB || "dev",
+      host: process.env.POSTGRES_HOST,
+      port: Number(process.env.POSTGRES_PORT),
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
       max: 1,
     });
     _db = new Kysely<DB>({

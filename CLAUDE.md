@@ -658,6 +658,11 @@ FGA_API_URL=http://localhost:8080
 PREFIX=tsfga
 ```
 
+All configuration comes from environment variables (loaded from `.env` by Bun).
+**Never hard-code default values** in `process.env` reads — use bare
+`process.env.VAR_NAME`, not `process.env.VAR_NAME || "fallback"`. Defaults
+belong in `.env` only, so there is a single source of truth.
+
 ### Test Preload (`tests/helpers/preload.ts`)
 
 ```typescript
@@ -980,6 +985,9 @@ preload = ["./tests/helpers/preload.ts"]
   accepting or recursing.
 - **Don't use Kysely types in core/.** The core module must remain
   database-agnostic.
+- **No default values for environment variables.** Read `process.env.VAR`
+  directly, without `|| "fallback"`. The `.env` file is the single source of
+  truth for defaults.
 - **No raw SQL for DML in the adapter.** All adapter queries must use
   Kysely's type-safe query builder. The only exception is `sql` expressions
   *within* builder calls (e.g., `onConflict().expression(sql`...`)`).
