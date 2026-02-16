@@ -13,6 +13,9 @@
 - user: user:diana
   relation: assignee
   object: role:viewer
+- user: anonymous:anon
+  relation: assignee
+  object: role:viewer
 
 # Folder hierarchy: root -> dashboards -> alerts
 - user: folder:root
@@ -35,6 +38,9 @@
 - user: service-account:bot
   relation: get
   object: folder:dashboards
+- user: service-account:bot
+  relation: update
+  object: folder:root
 
 # Folder subresource permissions (with condition)
 - user: user:alice
@@ -49,6 +55,52 @@
 - user: team:platform#member
   relation: resource_get
   object: folder:dashboards
+  condition:
+    name: subresource_filter
+    context:
+      subresources:
+        - "dashboard"
+
+# Folder subresource hierarchy (unconditional)
+- user: user:frank
+  relation: resource_admin
+  object: folder:root
+- user: user:charlie
+  relation: resource_edit
+  object: folder:dashboards
+- user: user:diana
+  relation: resource_view
+  object: folder:dashboards
+
+# Core type management
+- user: user:alice
+  relation: get
+  object: user:bob
+- user: service-account:bot
+  relation: get
+  object: user:bob
+- user: team:platform#member
+  relation: update
+  object: user:bob
+
+# group_resource permissions
+- user: user:alice
+  relation: admin
+  object: group_resource:gr_dashboards
+- user: render:renderer
+  relation: view
+  object: group_resource:gr_dashboards
+- user: team:platform#member
+  relation: edit
+  object: group_resource:gr_dashboards
+
+# Team subresource hierarchy
+- user: user:frank
+  relation: resource_admin
+  object: team:platform
+- user: user:eve
+  relation: resource_get
+  object: team:platform
   condition:
     name: subresource_filter
     context:
@@ -77,3 +129,15 @@
     name: group_filter
     context:
       group_resource: "prometheus"
+- user: service-account:monitor
+  relation: edit
+  object: resource:res_dashboards
+  condition:
+    name: group_filter
+    context:
+      group_resource: "grafana"
+
+# Role subresource
+- user: user:alice
+  relation: resource_edit
+  object: role:editor

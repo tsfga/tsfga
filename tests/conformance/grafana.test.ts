@@ -20,7 +20,8 @@ import {
 // Tests folder parent TTU cascade, deep impliedBy hierarchy,
 // userset subjects (team#member, role#assignee), CEL conditions
 // with string equality and list membership (`in` operator),
-// and hyphenated type names (service-account)
+// hyphenated type names (service-account), group_resource with render,
+// anonymous assignee, and subresource hierarchy on folder/team/user/role
 
 const uuidMap = new Map<string, string>([
   ["alice", "00000000-0000-4000-c100-000000000001"],
@@ -35,6 +36,12 @@ const uuidMap = new Map<string, string>([
   ["dashboards", "00000000-0000-4000-c100-00000000000a"],
   ["alerts", "00000000-0000-4000-c100-00000000000b"],
   ["res_dashboards", "00000000-0000-4000-c100-00000000000c"],
+  ["anon", "00000000-0000-4000-c100-00000000000d"],
+  ["renderer", "00000000-0000-4000-c100-00000000000e"],
+  ["gr_dashboards", "00000000-0000-4000-c100-00000000000f"],
+  ["editor", "00000000-0000-4000-c100-000000000010"],
+  ["frank", "00000000-0000-4000-c100-000000000011"],
+  ["monitor", "00000000-0000-4000-c100-000000000012"],
 ]);
 
 function uuid(name: string): string {
@@ -76,10 +83,10 @@ describe("Grafana Model Conformance", () => {
 
     // === Relation configs ===
 
-    // role.assignee
+    // --- Core types: user ---
     await tsfgaClient.writeRelationConfig({
-      objectType: "role",
-      relation: "assignee",
+      objectType: "user",
+      relation: "get",
       directlyAssignableTypes: ["user", "service-account", "team", "role"],
       impliedBy: null,
       computedUserset: null,
@@ -88,8 +95,351 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    // user subresource hierarchy
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_view",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_create",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "user",
+      relation: "resource_delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
 
-    // team.admin
+    // --- Core types: service-account ---
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    // service-account subresource hierarchy
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_view",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_create",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "service-account",
+      relation: "resource_delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+
+    // --- role ---
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "assignee",
+      directlyAssignableTypes: [
+        "user",
+        "service-account",
+        "anonymous",
+        "team",
+        "role",
+      ],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    // role subresource hierarchy
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_view",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_create",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "role",
+      relation: "resource_delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+
+    // --- team ---
     await tsfgaClient.writeRelationConfig({
       objectType: "team",
       relation: "admin",
@@ -101,8 +451,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // team.member: [user, service-account] or admin
     await tsfgaClient.writeRelationConfig({
       objectType: "team",
       relation: "member",
@@ -114,8 +462,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // team.get: [user, service-account, team#member, role#assignee] or member
     await tsfgaClient.writeRelationConfig({
       objectType: "team",
       relation: "get",
@@ -127,8 +473,130 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "get_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "set_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    // team subresource hierarchy
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_view",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_get",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_create",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "resource_delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
 
-    // folder.parent
+    // --- folder ---
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "parent",
@@ -140,8 +608,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.admin: [user, service-account, team#member, role#assignee] or admin from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "admin",
@@ -153,8 +619,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.edit: [user, service-account, team#member, role#assignee] or edit from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "edit",
@@ -166,8 +630,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.view: [user, service-account, team#member, role#assignee] or view from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "view",
@@ -179,8 +641,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.get: [user, service-account, team#member, role#assignee] or get from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "get",
@@ -192,8 +652,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.create: [user, service-account, team#member, role#assignee] or create from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "create",
@@ -205,8 +663,17 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.delete: [user, service-account, team#member, role#assignee] or delete from parent
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: [{ tupleset: "parent", computedUserset: "update" }],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "delete",
@@ -218,8 +685,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.get_permissions: [user, service-account, team#member, role#assignee] or get_permissions from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "get_permissions",
@@ -233,8 +698,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.set_permissions: [user, service-account, team#member, role#assignee] or set_permissions from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "set_permissions",
@@ -248,8 +711,7 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.can_get: admin or edit or view or get
+    // folder computed can_* relations
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "can_get",
@@ -261,8 +723,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.can_create: admin or edit or create
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "can_create",
@@ -274,8 +734,17 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.can_delete: admin or edit or delete
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "can_update",
+      directlyAssignableTypes: null,
+      impliedBy: ["admin", "edit", "update"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: false,
+    });
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "can_delete",
@@ -287,8 +756,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.can_get_permissions: admin or get_permissions
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "can_get_permissions",
@@ -300,8 +767,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.can_set_permissions: admin or set_permissions
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "can_set_permissions",
@@ -313,26 +778,62 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: false,
     });
-
-    // folder.resource_get: [... with subresource_filter] or resource_get from parent
+    // folder subresource hierarchy
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_admin" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_edit" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_view",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_view" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "resource_get",
       directlyAssignableTypes: ["user", "service-account", "team", "role"],
-      impliedBy: null,
+      impliedBy: ["resource_view"],
       computedUserset: null,
       tupleToUserset: [{ tupleset: "parent", computedUserset: "resource_get" }],
       excludedBy: null,
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // folder.resource_create: [... with subresource_filter] or resource_create from parent
     await tsfgaClient.writeRelationConfig({
       objectType: "folder",
       relation: "resource_create",
       directlyAssignableTypes: ["user", "service-account", "team", "role"],
-      impliedBy: null,
+      impliedBy: ["resource_edit"],
       computedUserset: null,
       tupleToUserset: [
         { tupleset: "parent", computedUserset: "resource_create" },
@@ -341,8 +842,185 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_update" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_edit"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_delete" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_get_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_get_permissions" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "folder",
+      relation: "resource_set_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["resource_admin"],
+      computedUserset: null,
+      tupleToUserset: [
+        { tupleset: "parent", computedUserset: "resource_set_permissions" },
+      ],
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
 
-    // resource.admin: [... with group_filter]
+    // --- group_resource ---
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "admin",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "edit",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "view",
+      directlyAssignableTypes: [
+        "user",
+        "service-account",
+        "render",
+        "team",
+        "role",
+      ],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "get",
+      directlyAssignableTypes: [
+        "user",
+        "service-account",
+        "render",
+        "team",
+        "role",
+      ],
+      impliedBy: ["view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "create",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "get_permissions",
+      directlyAssignableTypes: [
+        "user",
+        "service-account",
+        "render",
+        "team",
+        "role",
+      ],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "group_resource",
+      relation: "set_permissions",
+      directlyAssignableTypes: [
+        "user",
+        "service-account",
+        "render",
+        "team",
+        "role",
+      ],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+
+    // --- resource ---
     await tsfgaClient.writeRelationConfig({
       objectType: "resource",
       relation: "admin",
@@ -354,8 +1032,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // resource.edit: [... with group_filter] or admin
     await tsfgaClient.writeRelationConfig({
       objectType: "resource",
       relation: "edit",
@@ -367,8 +1043,6 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // resource.view: [... with group_filter] or edit
     await tsfgaClient.writeRelationConfig({
       objectType: "resource",
       relation: "view",
@@ -380,13 +1054,55 @@ describe("Grafana Model Conformance", () => {
       intersection: null,
       allowsUsersetSubjects: true,
     });
-
-    // resource.get: [... with group_filter] or view
     await tsfgaClient.writeRelationConfig({
       objectType: "resource",
       relation: "get",
       directlyAssignableTypes: ["user", "service-account", "team", "role"],
       impliedBy: ["view"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "resource",
+      relation: "update",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "resource",
+      relation: "delete",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["edit"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "resource",
+      relation: "get_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "resource",
+      relation: "set_permissions",
+      directlyAssignableTypes: ["user", "service-account", "team", "role"],
+      impliedBy: ["admin"],
       computedUserset: null,
       tupleToUserset: null,
       excludedBy: null,
@@ -426,6 +1142,13 @@ describe("Grafana Model Conformance", () => {
       relation: "assignee",
       subjectType: "user",
       subjectId: uuid("diana"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "role",
+      objectId: uuid("viewer"),
+      relation: "assignee",
+      subjectType: "anonymous",
+      subjectId: uuid("anon"),
     });
 
     // Folder hierarchy: root -> dashboards -> alerts
@@ -475,6 +1198,13 @@ describe("Grafana Model Conformance", () => {
       subjectType: "service-account",
       subjectId: uuid("bot"),
     });
+    await tsfgaClient.addTuple({
+      objectType: "folder",
+      objectId: uuid("root"),
+      relation: "update",
+      subjectType: "service-account",
+      subjectId: uuid("bot"),
+    });
 
     // Folder subresource permissions (with condition)
     await tsfgaClient.addTuple({
@@ -493,6 +1223,95 @@ describe("Grafana Model Conformance", () => {
       subjectType: "team",
       subjectId: uuid("platform"),
       subjectRelation: "member",
+      conditionName: "subresource_filter",
+      conditionContext: { subresources: ["dashboard"] },
+    });
+
+    // Folder subresource hierarchy (unconditional)
+    await tsfgaClient.addTuple({
+      objectType: "folder",
+      objectId: uuid("root"),
+      relation: "resource_admin",
+      subjectType: "user",
+      subjectId: uuid("frank"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "folder",
+      objectId: uuid("dashboards"),
+      relation: "resource_edit",
+      subjectType: "user",
+      subjectId: uuid("charlie"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "folder",
+      objectId: uuid("dashboards"),
+      relation: "resource_view",
+      subjectType: "user",
+      subjectId: uuid("diana"),
+    });
+
+    // Core type management
+    await tsfgaClient.addTuple({
+      objectType: "user",
+      objectId: uuid("bob"),
+      relation: "get",
+      subjectType: "user",
+      subjectId: uuid("alice"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "user",
+      objectId: uuid("bob"),
+      relation: "get",
+      subjectType: "service-account",
+      subjectId: uuid("bot"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "user",
+      objectId: uuid("bob"),
+      relation: "update",
+      subjectType: "team",
+      subjectId: uuid("platform"),
+      subjectRelation: "member",
+    });
+
+    // group_resource permissions
+    await tsfgaClient.addTuple({
+      objectType: "group_resource",
+      objectId: uuid("gr_dashboards"),
+      relation: "admin",
+      subjectType: "user",
+      subjectId: uuid("alice"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "group_resource",
+      objectId: uuid("gr_dashboards"),
+      relation: "view",
+      subjectType: "render",
+      subjectId: uuid("renderer"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "group_resource",
+      objectId: uuid("gr_dashboards"),
+      relation: "edit",
+      subjectType: "team",
+      subjectId: uuid("platform"),
+      subjectRelation: "member",
+    });
+
+    // Team subresource hierarchy
+    await tsfgaClient.addTuple({
+      objectType: "team",
+      objectId: uuid("platform"),
+      relation: "resource_admin",
+      subjectType: "user",
+      subjectId: uuid("frank"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "team",
+      objectId: uuid("platform"),
+      relation: "resource_get",
+      subjectType: "user",
+      subjectId: uuid("eve"),
       conditionName: "subresource_filter",
       conditionContext: { subresources: ["dashboard"] },
     });
@@ -525,6 +1344,24 @@ describe("Grafana Model Conformance", () => {
       subjectId: uuid("eve"),
       conditionName: "group_filter",
       conditionContext: { group_resource: "prometheus" },
+    });
+    await tsfgaClient.addTuple({
+      objectType: "resource",
+      objectId: uuid("res_dashboards"),
+      relation: "edit",
+      subjectType: "service-account",
+      subjectId: uuid("monitor"),
+      conditionName: "group_filter",
+      conditionContext: { group_resource: "grafana" },
+    });
+
+    // Role subresource
+    await tsfgaClient.addTuple({
+      objectType: "role",
+      objectId: uuid("editor"),
+      relation: "resource_edit",
+      subjectType: "user",
+      subjectId: uuid("alice"),
     });
 
     // Setup OpenFGA
@@ -1288,6 +2125,706 @@ describe("Grafana Model Conformance", () => {
         subjectId: uuid("bot"),
       },
       false,
+    );
+  });
+
+  // --- Group 10: Anonymous role assignee ---
+  test("46: anon can_get folder:root (anonymous assignee of role:viewer, view on root)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "can_get",
+        subjectType: "anonymous",
+        subjectId: uuid("anon"),
+      },
+      true,
+    );
+  });
+
+  test("47: anon does not can_create folder:root (view does not imply create)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "can_create",
+        subjectType: "anonymous",
+        subjectId: uuid("anon"),
+      },
+      false,
+    );
+  });
+
+  // --- Group 11: Core type management ---
+  test("48: alice get user:bob (direct)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "user",
+        objectId: uuid("bob"),
+        relation: "get",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("49: bot get user:bob (service-account direct)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "user",
+        objectId: uuid("bob"),
+        relation: "get",
+        subjectType: "service-account",
+        subjectId: uuid("bot"),
+      },
+      true,
+    );
+  });
+
+  test("50: bob update user:bob (team:platform#member userset)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "user",
+        objectId: uuid("bob"),
+        relation: "update",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
+
+  test("51: diana does not get user:bob (no tuple)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "user",
+        objectId: uuid("bob"),
+        relation: "get",
+        subjectType: "user",
+        subjectId: uuid("diana"),
+      },
+      false,
+    );
+  });
+
+  // --- Group 12: Team management ---
+  test("52: alice update team:platform (admin implies update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "update",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("53: alice delete team:platform (admin implies delete)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "delete",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("54: alice set_permissions team:platform (admin implies set_permissions)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "set_permissions",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("55: bob does not update team:platform (member does not imply update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "update",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      false,
+    );
+  });
+
+  test("56: alice get_permissions team:platform (admin implies get_permissions)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "get_permissions",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  // --- Group 13: Folder update/can_update ---
+  test("57: alice can_update folder:root (admin implies can_update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "can_update",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("58: bob can_update folder:dashboards (edit implies can_update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "can_update",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
+
+  test("59: bot can_update folder:root (direct update tuple)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "can_update",
+        subjectType: "service-account",
+        subjectId: uuid("bot"),
+      },
+      true,
+    );
+  });
+
+  test("60: diana does not can_update folder:root (view does not imply update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "can_update",
+        subjectType: "user",
+        subjectId: uuid("diana"),
+      },
+      false,
+    );
+  });
+
+  // --- Group 14: group_resource with render ---
+  test("61: alice get group_resource:gr_dashboards (admin chain)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "group_resource",
+        objectId: uuid("gr_dashboards"),
+        relation: "get",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("62: alice get_permissions group_resource:gr_dashboards (admin implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "group_resource",
+        objectId: uuid("gr_dashboards"),
+        relation: "get_permissions",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("63: renderer get group_resource:gr_dashboards (view implies get)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "group_resource",
+        objectId: uuid("gr_dashboards"),
+        relation: "get",
+        subjectType: "render",
+        subjectId: uuid("renderer"),
+      },
+      true,
+    );
+  });
+
+  test("64: renderer does not edit group_resource:gr_dashboards (view does not imply edit)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "group_resource",
+        objectId: uuid("gr_dashboards"),
+        relation: "edit",
+        subjectType: "render",
+        subjectId: uuid("renderer"),
+      },
+      false,
+    );
+  });
+
+  test("65: bob create group_resource:gr_dashboards (team#member edit implies create)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "group_resource",
+        objectId: uuid("gr_dashboards"),
+        relation: "create",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
+
+  // --- Group 15: Folder subresource hierarchy ---
+  test("66: frank resource_view folder:root (resource_admin implied chain)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "resource_view",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+      },
+      true,
+    );
+  });
+
+  test("67: frank resource_view folder:dashboards (parent TTU)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_view",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+      },
+      true,
+    );
+  });
+
+  test("68: frank resource_get folder:root (resource_admin -> resource_edit -> resource_view implies resource_get)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("69: charlie resource_get folder:dashboards (resource_edit -> resource_view implies resource_get)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("charlie"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("70: diana resource_get folder:dashboards (resource_view implies resource_get)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("diana"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("71: diana does not resource_create folder:dashboards (resource_view does not reach resource_edit)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_create",
+        subjectType: "user",
+        subjectId: uuid("diana"),
+        context: { subresource: "dashboard" },
+      },
+      false,
+    );
+  });
+
+  // --- Group 16: Folder subresource conditional operations ---
+  test("72: charlie resource_update folder:dashboards (resource_edit implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_update",
+        subjectType: "user",
+        subjectId: uuid("charlie"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("73: charlie resource_delete folder:dashboards (resource_edit implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_delete",
+        subjectType: "user",
+        subjectId: uuid("charlie"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("74: frank resource_get_permissions folder:root (resource_admin implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("root"),
+        relation: "resource_get_permissions",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("75: frank resource_set_permissions folder:dashboards (parent TTU cascade)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_set_permissions",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("76: diana does not resource_set_permissions folder:dashboards (resource_view does not reach)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "folder",
+        objectId: uuid("dashboards"),
+        relation: "resource_set_permissions",
+        subjectType: "user",
+        subjectId: uuid("diana"),
+        context: { subresource: "anything" },
+      },
+      false,
+    );
+  });
+
+  // --- Group 17: Team subresource ---
+  test("77: frank resource_view team:platform (resource_admin implied chain)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "resource_view",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+      },
+      true,
+    );
+  });
+
+  test("78: frank resource_get team:platform (resource_admin -> resource_view implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("frank"),
+        context: { subresource: "anything" },
+      },
+      true,
+    );
+  });
+
+  test("79: eve resource_get team:platform {subresource:dashboard} -> true (conditional direct)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("eve"),
+        context: { subresource: "dashboard" },
+      },
+      true,
+    );
+  });
+
+  test("80: eve resource_get team:platform {subresource:alert-rule} -> false (not in list)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "team",
+        objectId: uuid("platform"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("eve"),
+        context: { subresource: "alert-rule" },
+      },
+      false,
+    );
+  });
+
+  // --- Group 18: Resource update/delete/get_permissions/set_permissions ---
+  test("81: alice update resource:dashboards {requested_group:grafana} -> true (admin > edit > update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "resource",
+        objectId: uuid("res_dashboards"),
+        relation: "update",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        context: { requested_group: "grafana" },
+      },
+      true,
+    );
+  });
+
+  test("82: alice get_permissions resource:dashboards {requested_group:grafana} -> true (admin implies)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "resource",
+        objectId: uuid("res_dashboards"),
+        relation: "get_permissions",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        context: { requested_group: "grafana" },
+      },
+      true,
+    );
+  });
+
+  test("83: alice update resource:dashboards {requested_group:prometheus} -> false (wrong group)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "resource",
+        objectId: uuid("res_dashboards"),
+        relation: "update",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        context: { requested_group: "prometheus" },
+      },
+      false,
+    );
+  });
+
+  test("84: monitor update resource:dashboards {requested_group:grafana} -> true (edit implies update)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "resource",
+        objectId: uuid("res_dashboards"),
+        relation: "update",
+        subjectType: "service-account",
+        subjectId: uuid("monitor"),
+        context: { requested_group: "grafana" },
+      },
+      true,
+    );
+  });
+
+  test("85: monitor does not get_permissions resource:dashboards {requested_group:grafana} (edit does not imply admin)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "resource",
+        objectId: uuid("res_dashboards"),
+        relation: "get_permissions",
+        subjectType: "service-account",
+        subjectId: uuid("monitor"),
+        context: { requested_group: "grafana" },
+      },
+      false,
+    );
+  });
+
+  // --- Group 19: Role subresource ---
+  test("86: alice resource_view role:editor (resource_edit implies resource_view)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "role",
+        objectId: uuid("editor"),
+        relation: "resource_view",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+      },
+      true,
+    );
+  });
+
+  test("87: alice resource_get role:editor (resource_edit -> resource_view implies resource_get)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "role",
+        objectId: uuid("editor"),
+        relation: "resource_get",
+        subjectType: "user",
+        subjectId: uuid("alice"),
+        context: { subresource: "anything" },
+      },
+      true,
     );
   });
 });
