@@ -5,23 +5,18 @@
 
 import type { ColumnType } from "kysely";
 
-export type Generated<T> =
-	T extends ColumnType<infer S, infer I, infer U>
-		? ColumnType<S, I | undefined, U>
-		: ColumnType<T, T | undefined, T>;
+export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
+  ? ColumnType<S, I | undefined, U>
+  : ColumnType<T, T | undefined, T>;
 
-export type Int8 = ColumnType<
-	string,
-	bigint | number | string,
-	bigint | number | string
->;
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
 
 export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
 
 export type JsonObject = {
-	[x: string]: JsonValue | undefined;
+  [x: string]: JsonValue | undefined;
 };
 
 export type JsonPrimitive = boolean | number | string | null;
@@ -30,104 +25,104 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export interface FgaConditionDefinitions {
-	expression: string;
-	id: Generated<Int8>;
-	name: string;
-	parameters: Generated<Json>;
-}
-
-export interface FgaRelationConfigs {
-	allows_userset_subjects: Generated<boolean | null>;
-	computed_userset: string | null;
-	directly_assignable_types: string[] | null;
-	id: Generated<Int8>;
-	implied_by: string[] | null;
-	metadata: Json | null;
-	object_type: string;
-	relation: string;
-	tuple_to_userset: Json | null;
-}
-
-export interface FgaTuples {
-	condition_context: Json | null;
-	condition_name: string | null;
-	created_at: Generated<Timestamp | null>;
-	id: Generated<Int8>;
-	metadata: Json | null;
-	object_id: string;
-	object_type: string;
-	relation: string;
-	subject_id: string;
-	subject_relation: string | null;
-	subject_type: string;
-	updated_at: Generated<Timestamp | null>;
-}
-
 export interface OpenfgaAssertion {
-	assertions: Buffer | null;
-	authorization_model_id: string;
-	store: string;
+  assertions: Buffer | null;
+  authorization_model_id: string;
+  store: string;
 }
 
 export interface OpenfgaAuthorizationModel {
-	authorization_model_id: string;
-	schema_version: Generated<string>;
-	serialized_protobuf: Buffer | null;
-	store: string;
-	type: string;
-	type_definition: Buffer | null;
+  authorization_model_id: string;
+  schema_version: Generated<string>;
+  serialized_protobuf: Buffer | null;
+  store: string;
+  type: string;
+  type_definition: Buffer | null;
 }
 
 export interface OpenfgaChangelog {
-	_user: string;
-	condition_context: Buffer | null;
-	condition_name: string | null;
-	inserted_at: Timestamp;
-	object_id: string;
-	object_type: string;
-	operation: number;
-	relation: string;
-	store: string;
-	ulid: string;
+  _user: string;
+  condition_context: Buffer | null;
+  condition_name: string | null;
+  inserted_at: Timestamp;
+  object_id: string;
+  object_type: string;
+  operation: number;
+  relation: string;
+  store: string;
+  ulid: string;
 }
 
 export interface OpenfgaGooseDbVersion {
-	id: Generated<number>;
-	is_applied: boolean;
-	tstamp: Generated<Timestamp>;
-	version_id: Int8;
+  id: Generated<number>;
+  is_applied: boolean;
+  tstamp: Generated<Timestamp>;
+  version_id: Int8;
 }
 
 export interface OpenfgaStore {
-	created_at: Timestamp;
-	deleted_at: Timestamp | null;
-	id: string;
-	name: string;
-	updated_at: Timestamp | null;
+  created_at: Timestamp;
+  deleted_at: Timestamp | null;
+  id: string;
+  name: string;
+  updated_at: Timestamp | null;
 }
 
 export interface OpenfgaTuple {
-	_user: string;
-	condition_context: Buffer | null;
-	condition_name: string | null;
-	inserted_at: Timestamp;
-	object_id: string;
-	object_type: string;
-	relation: string;
-	store: string;
-	ulid: string;
-	user_type: string;
+  _user: string;
+  condition_context: Buffer | null;
+  condition_name: string | null;
+  inserted_at: Timestamp;
+  object_id: string;
+  object_type: string;
+  relation: string;
+  store: string;
+  ulid: string;
+  user_type: string;
+}
+
+export interface TsfgaConditionDefinitions {
+  expression: string;
+  id: Generated<Int8>;
+  name: string;
+  parameters: Generated<Json>;
+}
+
+export interface TsfgaRelationConfigs {
+  allows_userset_subjects: Generated<boolean | null>;
+  computed_userset: string | null;
+  directly_assignable_types: string[] | null;
+  id: Generated<Int8>;
+  implied_by: string[] | null;
+  metadata: Json | null;
+  object_type: string;
+  relation: string;
+  tuple_to_userset: Json | null;
+}
+
+export interface TsfgaTuples {
+  condition_context: Json | null;
+  condition_name: string | null;
+  created_at: Generated<Timestamp | null>;
+  id: Generated<Int8>;
+  metadata: Json | null;
+  object_id: string;
+  object_type: string;
+  relation: string;
+  subject_id: string;
+  subject_relation: string | null;
+  subject_type: string;
+  updated_at: Generated<Timestamp | null>;
 }
 
 export interface DB {
-	"fga.condition_definitions": FgaConditionDefinitions;
-	"fga.relation_configs": FgaRelationConfigs;
-	"fga.tuples": FgaTuples;
-	"openfga.assertion": OpenfgaAssertion;
-	"openfga.authorization_model": OpenfgaAuthorizationModel;
-	"openfga.changelog": OpenfgaChangelog;
-	"openfga.goose_db_version": OpenfgaGooseDbVersion;
-	"openfga.store": OpenfgaStore;
-	"openfga.tuple": OpenfgaTuple;
+  "openfga.assertion": OpenfgaAssertion;
+  "openfga.authorization_model": OpenfgaAuthorizationModel;
+  "openfga.changelog": OpenfgaChangelog;
+  "openfga.goose_db_version": OpenfgaGooseDbVersion;
+  "openfga.store": OpenfgaStore;
+  "openfga.tuple": OpenfgaTuple;
+  "tsfga.condition_definitions": TsfgaConditionDefinitions;
+  "tsfga.relation_configs": TsfgaRelationConfigs;
+  "tsfga.tuples": TsfgaTuples;
 }

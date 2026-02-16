@@ -1,12 +1,12 @@
-name: ${PREFIX:-fga-ts}
+name: ${PREFIX:-tsfga}
 networks:
   default:
     external: false
-    name: ${PREFIX:-fga-ts}
+    name: ${PREFIX:-tsfga}
 services:
   postgres:
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
-    container_name: ${PREFIX:-fga-ts}-postgres
+    container_name: ${PREFIX:-tsfga}-postgres
     environment:
       PGDATA: "/var/lib/postgresql/18/docker"
       PGHOST: "/var/run/postgresql"
@@ -35,7 +35,7 @@ services:
       postgres:
         condition: service_healthy
     image: openfga/openfga:latest
-    container_name: ${PREFIX:-fga-ts}-openfga-migrate
+    container_name: ${PREFIX:-tsfga}-openfga-migrate
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://${POSTGRES_USER:-dev}:${POSTGRES_PASSWORD:-password}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-dev}?sslmode=disable&search_path=openfga
@@ -48,7 +48,7 @@ services:
       openfga-migrate:
         condition: service_completed_successfully
     image: openfga/openfga:latest
-    container_name: ${PREFIX:-fga-ts}-openfga
+    container_name: ${PREFIX:-tsfga}-openfga
     command: run
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
@@ -76,4 +76,4 @@ services:
 volumes:
   postgres-data:
     driver: local
-    name: ${PREFIX:-fga-ts}-postgres-data
+    name: ${PREFIX:-tsfga}-postgres-data

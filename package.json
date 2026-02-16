@@ -1,12 +1,12 @@
 {
-  "name": "lemuelroberto/fga-ts",
+  "name": "lemuelroberto/tsfga",
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
     "check": "biome check .",
     "format": "biome format --write .",
     "lint": "biome lint .",
-    "tsc": "bunx tsc --noEmit",
+    "tsc": "tsc --noEmit",
     "start": "bun run src/index.ts",
     "test": "bun test",
     "db:generate": "bunx kysely-codegen --out-file src/store/kysely/schema.ts"

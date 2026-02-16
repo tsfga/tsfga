@@ -1,570 +1,570 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
-import { createFga, type FgaClient } from "../../src/index.ts";
-import { KyselyTupleStore } from "../../src/store/kysely/adapter.ts";
-import { expectConformance } from "../helpers/conformance.ts";
-import { cleanFgaTables, destroyDb, getDb } from "../helpers/db.ts";
+import { createTsfga, type TsfgaClient } from "src/index.ts";
+import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
+import { expectConformance } from "tests/helpers/conformance.ts";
+import { cleanTsfgaTables, destroyDb, getDb } from "tests/helpers/db.ts";
 import {
-	fgaCreateStore,
-	fgaWriteModel,
-	fgaWriteTuples,
-} from "../helpers/openfga.ts";
+  fgaCreateStore,
+  fgaWriteModel,
+  fgaWriteTuples,
+} from "tests/helpers/openfga.ts";
 
 // Deterministic UUIDs for name -> UUID mapping
 // Using v4-like format but deterministic for reproducibility
 const uuidMap = new Map<string, string>([
-	["sandcastle", "00000000-0000-4000-a000-000000000001"],
-	["amy", "00000000-0000-4000-a000-000000000002"],
-	["bob", "00000000-0000-4000-a000-000000000003"],
-	["catherine", "00000000-0000-4000-a000-000000000004"],
-	["david", "00000000-0000-4000-a000-000000000005"],
-	["emily", "00000000-0000-4000-a000-000000000006"],
-	["general", "00000000-0000-4000-a000-000000000007"],
-	["marketing_internal", "00000000-0000-4000-a000-000000000008"],
-	["proj_marketing_campaign", "00000000-0000-4000-a000-000000000009"],
+  ["sandcastle", "00000000-0000-4000-a000-000000000001"],
+  ["amy", "00000000-0000-4000-a000-000000000002"],
+  ["bob", "00000000-0000-4000-a000-000000000003"],
+  ["catherine", "00000000-0000-4000-a000-000000000004"],
+  ["david", "00000000-0000-4000-a000-000000000005"],
+  ["emily", "00000000-0000-4000-a000-000000000006"],
+  ["general", "00000000-0000-4000-a000-000000000007"],
+  ["marketing_internal", "00000000-0000-4000-a000-000000000008"],
+  ["proj_marketing_campaign", "00000000-0000-4000-a000-000000000009"],
 ]);
 
 function uuid(name: string): string {
-	const id = uuidMap.get(name);
-	if (!id) throw new Error(`No UUID for ${name}`);
-	return id;
+  const id = uuidMap.get(name);
+  if (!id) throw new Error(`No UUID for ${name}`);
+  return id;
 }
 
 describe("Slack Model Conformance", () => {
-	let storeId: string;
-	let authorizationModelId: string;
-	let fgaClient: FgaClient;
+  let storeId: string;
+  let authorizationModelId: string;
+  let tsfgaClient: TsfgaClient;
 
-	beforeAll(async () => {
-		const db = getDb();
-		await cleanFgaTables(db);
+  beforeAll(async () => {
+    const db = getDb();
+    await cleanTsfgaTables(db);
 
-		const store = new KyselyTupleStore(db);
-		fgaClient = createFga(store);
+    const store = new KyselyTupleStore(db);
+    tsfgaClient = createTsfga(store);
 
-		// Write relation configs matching the Slack model
-		await fgaClient.writeRelationConfig({
-			objectType: "workspace",
-			relation: "legacy_admin",
-			directlyAssignableTypes: ["user"],
-			allowsUsersetSubjects: false,
-		});
-		await fgaClient.writeRelationConfig({
-			objectType: "workspace",
-			relation: "channels_admin",
-			directlyAssignableTypes: ["user"],
-			impliedBy: ["legacy_admin"],
-			allowsUsersetSubjects: false,
-		});
-		await fgaClient.writeRelationConfig({
-			objectType: "workspace",
-			relation: "member",
-			directlyAssignableTypes: ["user"],
-			impliedBy: ["channels_admin"],
-			allowsUsersetSubjects: false,
-		});
-		await fgaClient.writeRelationConfig({
-			objectType: "workspace",
-			relation: "guest",
-			directlyAssignableTypes: ["user"],
-			allowsUsersetSubjects: false,
-		});
-		await fgaClient.writeRelationConfig({
-			objectType: "channel",
-			relation: "writer",
-			directlyAssignableTypes: ["user", "workspace"],
-			allowsUsersetSubjects: true,
-		});
-		await fgaClient.writeRelationConfig({
-			objectType: "channel",
-			relation: "commenter",
-			directlyAssignableTypes: ["user", "workspace"],
-			impliedBy: ["writer"],
-			allowsUsersetSubjects: true,
-		});
+    // Write relation configs matching the Slack model
+    await tsfgaClient.writeRelationConfig({
+      objectType: "workspace",
+      relation: "legacy_admin",
+      directlyAssignableTypes: ["user"],
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "workspace",
+      relation: "channels_admin",
+      directlyAssignableTypes: ["user"],
+      impliedBy: ["legacy_admin"],
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "workspace",
+      relation: "member",
+      directlyAssignableTypes: ["user"],
+      impliedBy: ["channels_admin"],
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "workspace",
+      relation: "guest",
+      directlyAssignableTypes: ["user"],
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "channel",
+      relation: "writer",
+      directlyAssignableTypes: ["user", "workspace"],
+      allowsUsersetSubjects: true,
+    });
+    await tsfgaClient.writeRelationConfig({
+      objectType: "channel",
+      relation: "commenter",
+      directlyAssignableTypes: ["user", "workspace"],
+      impliedBy: ["writer"],
+      allowsUsersetSubjects: true,
+    });
 
-		// Write tuples using UUIDs
-		// Workspace roles
-		await fgaClient.addTuple({
-			objectType: "workspace",
-			objectId: uuid("sandcastle"),
-			relation: "legacy_admin",
-			subjectType: "user",
-			subjectId: uuid("amy"),
-		});
-		await fgaClient.addTuple({
-			objectType: "workspace",
-			objectId: uuid("sandcastle"),
-			relation: "channels_admin",
-			subjectType: "user",
-			subjectId: uuid("bob"),
-		});
-		await fgaClient.addTuple({
-			objectType: "workspace",
-			objectId: uuid("sandcastle"),
-			relation: "member",
-			subjectType: "user",
-			subjectId: uuid("catherine"),
-		});
-		await fgaClient.addTuple({
-			objectType: "workspace",
-			objectId: uuid("sandcastle"),
-			relation: "guest",
-			subjectType: "user",
-			subjectId: uuid("david"),
-		});
-		await fgaClient.addTuple({
-			objectType: "workspace",
-			objectId: uuid("sandcastle"),
-			relation: "member",
-			subjectType: "user",
-			subjectId: uuid("emily"),
-		});
+    // Write tuples using UUIDs
+    // Workspace roles
+    await tsfgaClient.addTuple({
+      objectType: "workspace",
+      objectId: uuid("sandcastle"),
+      relation: "legacy_admin",
+      subjectType: "user",
+      subjectId: uuid("amy"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "workspace",
+      objectId: uuid("sandcastle"),
+      relation: "channels_admin",
+      subjectType: "user",
+      subjectId: uuid("bob"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "workspace",
+      objectId: uuid("sandcastle"),
+      relation: "member",
+      subjectType: "user",
+      subjectId: uuid("catherine"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "workspace",
+      objectId: uuid("sandcastle"),
+      relation: "guest",
+      subjectType: "user",
+      subjectId: uuid("david"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "workspace",
+      objectId: uuid("sandcastle"),
+      relation: "member",
+      subjectType: "user",
+      subjectId: uuid("emily"),
+    });
 
-		// Channel: general
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("general"),
-			relation: "writer",
-			subjectType: "user",
-			subjectId: uuid("emily"),
-		});
+    // Channel: general
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("general"),
+      relation: "writer",
+      subjectType: "user",
+      subjectId: uuid("emily"),
+    });
 
-		// Channel: marketing_internal
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("marketing_internal"),
-			relation: "writer",
-			subjectType: "user",
-			subjectId: uuid("bob"),
-		});
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("marketing_internal"),
-			relation: "writer",
-			subjectType: "user",
-			subjectId: uuid("emily"),
-		});
+    // Channel: marketing_internal
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("marketing_internal"),
+      relation: "writer",
+      subjectType: "user",
+      subjectId: uuid("bob"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("marketing_internal"),
+      relation: "writer",
+      subjectType: "user",
+      subjectId: uuid("emily"),
+    });
 
-		// Channel: proj_marketing_campaign
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("proj_marketing_campaign"),
-			relation: "writer",
-			subjectType: "user",
-			subjectId: uuid("david"),
-		});
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("proj_marketing_campaign"),
-			relation: "writer",
-			subjectType: "user",
-			subjectId: uuid("emily"),
-		});
-		// Userset: workspace:sandcastle#member
-		await fgaClient.addTuple({
-			objectType: "channel",
-			objectId: uuid("proj_marketing_campaign"),
-			relation: "writer",
-			subjectType: "workspace",
-			subjectId: uuid("sandcastle"),
-			subjectRelation: "member",
-		});
+    // Channel: proj_marketing_campaign
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("proj_marketing_campaign"),
+      relation: "writer",
+      subjectType: "user",
+      subjectId: uuid("david"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("proj_marketing_campaign"),
+      relation: "writer",
+      subjectType: "user",
+      subjectId: uuid("emily"),
+    });
+    // Userset: workspace:sandcastle#member
+    await tsfgaClient.addTuple({
+      objectType: "channel",
+      objectId: uuid("proj_marketing_campaign"),
+      relation: "writer",
+      subjectType: "workspace",
+      subjectId: uuid("sandcastle"),
+      subjectRelation: "member",
+    });
 
-		// Setup OpenFGA
-		storeId = await fgaCreateStore("slack-conformance");
-		authorizationModelId = await fgaWriteModel(
-			storeId,
-			"examples/slack/model.dsl",
-		);
-		await fgaWriteTuples(
-			storeId,
-			"examples/slack/tuples.yaml",
-			authorizationModelId,
-			uuidMap,
-		);
-	});
+    // Setup OpenFGA
+    storeId = await fgaCreateStore("slack-conformance");
+    authorizationModelId = await fgaWriteModel(
+      storeId,
+      "examples/slack/model.dsl",
+    );
+    await fgaWriteTuples(
+      storeId,
+      "examples/slack/tuples.yaml",
+      authorizationModelId,
+      uuidMap,
+    );
+  });
 
-	afterAll(async () => {
-		await destroyDb();
-	});
+  afterAll(async () => {
+    await destroyDb();
+  });
 
-	// Workspace role checks
+  // Workspace role checks
 
-	test("1: amy is legacy_admin of workspace:sandcastle", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "legacy_admin",
-				subjectType: "user",
-				subjectId: uuid("amy"),
-			},
-			true,
-		);
-	});
+  test("1: amy is legacy_admin of workspace:sandcastle", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "legacy_admin",
+        subjectType: "user",
+        subjectId: uuid("amy"),
+      },
+      true,
+    );
+  });
 
-	test("2: amy is member via inheritance chain", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "member",
-				subjectType: "user",
-				subjectId: uuid("amy"),
-			},
-			true,
-		);
-	});
+  test("2: amy is member via inheritance chain", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "member",
+        subjectType: "user",
+        subjectId: uuid("amy"),
+      },
+      true,
+    );
+  });
 
-	test("3: bob is channels_admin", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "channels_admin",
-				subjectType: "user",
-				subjectId: uuid("bob"),
-			},
-			true,
-		);
-	});
+  test("3: bob is channels_admin", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "channels_admin",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
 
-	test("4: bob is member via channels_admin", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "member",
-				subjectType: "user",
-				subjectId: uuid("bob"),
-			},
-			true,
-		);
-	});
+  test("4: bob is member via channels_admin", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "member",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
 
-	test("5: catherine is direct member", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "member",
-				subjectType: "user",
-				subjectId: uuid("catherine"),
-			},
-			true,
-		);
-	});
+  test("5: catherine is direct member", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "member",
+        subjectType: "user",
+        subjectId: uuid("catherine"),
+      },
+      true,
+    );
+  });
 
-	test("6: david is NOT member", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "member",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			false,
-		);
-	});
+  test("6: david is NOT member", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "member",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      false,
+    );
+  });
 
-	test("7: emily is direct member", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "member",
-				subjectType: "user",
-				subjectId: uuid("emily"),
-			},
-			true,
-		);
-	});
+  test("7: emily is direct member", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "member",
+        subjectType: "user",
+        subjectId: uuid("emily"),
+      },
+      true,
+    );
+  });
 
-	// Channel: general
+  // Channel: general
 
-	test("8: emily is writer on #general", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("general"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("emily"),
-			},
-			true,
-		);
-	});
+  test("8: emily is writer on #general", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("general"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("emily"),
+      },
+      true,
+    );
+  });
 
-	test("9: david is NOT writer on #general", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("general"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			false,
-		);
-	});
+  test("9: david is NOT writer on #general", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("general"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      false,
+    );
+  });
 
-	test("10: emily is commenter on #general (writer implies commenter)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("general"),
-				relation: "commenter",
-				subjectType: "user",
-				subjectId: uuid("emily"),
-			},
-			true,
-		);
-	});
+  test("10: emily is commenter on #general (writer implies commenter)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("general"),
+        relation: "commenter",
+        subjectType: "user",
+        subjectId: uuid("emily"),
+      },
+      true,
+    );
+  });
 
-	test("11: david is NOT commenter on #general", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("general"),
-				relation: "commenter",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			false,
-		);
-	});
+  test("11: david is NOT commenter on #general", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("general"),
+        relation: "commenter",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      false,
+    );
+  });
 
-	// Channel: marketing_internal
+  // Channel: marketing_internal
 
-	test("12: bob is writer on #marketing_internal", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("marketing_internal"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("bob"),
-			},
-			true,
-		);
-	});
+  test("12: bob is writer on #marketing_internal", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("marketing_internal"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
 
-	test("13: emily is writer on #marketing_internal", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("marketing_internal"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("emily"),
-			},
-			true,
-		);
-	});
+  test("13: emily is writer on #marketing_internal", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("marketing_internal"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("emily"),
+      },
+      true,
+    );
+  });
 
-	test("14: catherine is NOT writer on #marketing_internal", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("marketing_internal"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("catherine"),
-			},
-			false,
-		);
-	});
+  test("14: catherine is NOT writer on #marketing_internal", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("marketing_internal"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("catherine"),
+      },
+      false,
+    );
+  });
 
-	// Channel: proj_marketing_campaign (userset expansion)
+  // Channel: proj_marketing_campaign (userset expansion)
 
-	test("15: david is writer on proj_marketing_campaign (direct)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			true,
-		);
-	});
+  test("15: david is writer on proj_marketing_campaign (direct)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      true,
+    );
+  });
 
-	test("16: emily is writer on proj_marketing_campaign (direct)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("emily"),
-			},
-			true,
-		);
-	});
+  test("16: emily is writer on proj_marketing_campaign (direct)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("emily"),
+      },
+      true,
+    );
+  });
 
-	test("17: catherine is writer on proj_marketing_campaign (via workspace#member)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("catherine"),
-			},
-			true,
-		);
-	});
+  test("17: catherine is writer on proj_marketing_campaign (via workspace#member)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("catherine"),
+      },
+      true,
+    );
+  });
 
-	test("18: amy is writer on proj_marketing_campaign (via inheritance + userset)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("amy"),
-			},
-			true,
-		);
-	});
+  test("18: amy is writer on proj_marketing_campaign (via inheritance + userset)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("amy"),
+      },
+      true,
+    );
+  });
 
-	test("19: bob is writer on proj_marketing_campaign (via channels_admin -> member userset)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "writer",
-				subjectType: "user",
-				subjectId: uuid("bob"),
-			},
-			true,
-		);
-	});
+  test("19: bob is writer on proj_marketing_campaign (via channels_admin -> member userset)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "writer",
+        subjectType: "user",
+        subjectId: uuid("bob"),
+      },
+      true,
+    );
+  });
 
-	// Commenter inheritance on proj_marketing_campaign
+  // Commenter inheritance on proj_marketing_campaign
 
-	test("20: david is commenter on proj_marketing_campaign (writer implies commenter)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "commenter",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			true,
-		);
-	});
+  test("20: david is commenter on proj_marketing_campaign (writer implies commenter)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "commenter",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      true,
+    );
+  });
 
-	test("21: catherine is commenter on proj_marketing_campaign (via userset + writer implies commenter)", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "channel",
-				objectId: uuid("proj_marketing_campaign"),
-				relation: "commenter",
-				subjectType: "user",
-				subjectId: uuid("catherine"),
-			},
-			true,
-		);
-	});
+  test("21: catherine is commenter on proj_marketing_campaign (via userset + writer implies commenter)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "channel",
+        objectId: uuid("proj_marketing_campaign"),
+        relation: "commenter",
+        subjectType: "user",
+        subjectId: uuid("catherine"),
+      },
+      true,
+    );
+  });
 
-	// Negative checks: guest isolation
+  // Negative checks: guest isolation
 
-	test("22: amy is NOT guest", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "guest",
-				subjectType: "user",
-				subjectId: uuid("amy"),
-			},
-			false,
-		);
-	});
+  test("22: amy is NOT guest", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "guest",
+        subjectType: "user",
+        subjectId: uuid("amy"),
+      },
+      false,
+    );
+  });
 
-	test("23: david IS guest", async () => {
-		await expectConformance(
-			storeId,
-			authorizationModelId,
-			fgaClient,
-			{
-				objectType: "workspace",
-				objectId: uuid("sandcastle"),
-				relation: "guest",
-				subjectType: "user",
-				subjectId: uuid("david"),
-			},
-			true,
-		);
-	});
+  test("23: david IS guest", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "workspace",
+        objectId: uuid("sandcastle"),
+        relation: "guest",
+        subjectType: "user",
+        subjectId: uuid("david"),
+      },
+      true,
+    );
+  });
 });
