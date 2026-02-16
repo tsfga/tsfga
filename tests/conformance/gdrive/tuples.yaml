@@ -1,0 +1,37 @@
+# Group membership
+- user: user:alice
+  relation: member
+  object: group:engineering
+- user: user:bob
+  relation: member
+  object: group:engineering
+
+# Folder structure
+- user: user:alice
+  relation: owner
+  object: folder:root
+- user: folder:root
+  relation: parent
+  object: folder:shared
+# shared folder is public
+- user: user:*
+  relation: viewer
+  object: folder:shared
+
+# doc:design - owned by bob, in folder:root
+- user: user:bob
+  relation: owner
+  object: doc:design
+- user: folder:root
+  relation: parent
+  object: doc:design
+
+# doc:public - in folder:shared (inherits public access)
+- user: folder:shared
+  relation: parent
+  object: doc:public
+
+# doc:private - viewer restricted to engineering group
+- user: group:engineering#member
+  relation: viewer
+  object: doc:private
