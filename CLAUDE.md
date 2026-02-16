@@ -945,6 +945,13 @@ preload = ["./tests/helpers/preload.ts"]
 - Wrap body paragraphs at ~74 columns
 - Use imperative verbs: "Fix ...", "Add ...", "Make ...",
   "Refactor ...", "Remove ..."
+- When the change is based on or derived from an important external
+  source (documentation page, upstream schema, specification, GitHub
+  issue/PR), add `Ref:` lines after the body. Use **permalink URLs**
+  (pinned to a commit SHA) for GitHub file links so they survive
+  future renames. Only reference sources that meaningfully informed
+  the implementation — not every tangential link. Multiple sources
+  use separate `Ref:` lines or a `Refs:` block.
 
 ## Anti-Patterns (DO NOT)
 
