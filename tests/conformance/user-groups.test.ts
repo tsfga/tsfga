@@ -52,6 +52,8 @@ describe("User Groups Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -61,6 +63,8 @@ describe("User Groups Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: true,
     });
 

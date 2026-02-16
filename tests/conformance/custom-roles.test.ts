@@ -54,6 +54,8 @@ describe("Custom Roles Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -63,6 +65,8 @@ describe("Custom Roles Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: true,
     });
     await tsfgaClient.writeRelationConfig({
@@ -72,6 +76,8 @@ describe("Custom Roles Conformance", () => {
       impliedBy: ["editor"],
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: true,
     });
 

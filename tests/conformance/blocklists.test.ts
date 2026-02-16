@@ -16,12 +16,14 @@ import {
   fgaWriteTuples,
 } from "tests/helpers/openfga.ts";
 
-// Ref: https://openfga.dev/docs/modeling/direct-access
+// Ref: https://openfga.dev/docs/modeling/blocklists
 
 const uuidMap = new Map<string, string>([
-  ["bob", "00000000-0000-4000-b000-000000000001"],
-  ["alice", "00000000-0000-4000-b000-000000000002"],
-  ["meeting_notes", "00000000-0000-4000-b000-000000000003"],
+  ["becky", "00000000-0000-4000-b600-000000000001"],
+  ["carl", "00000000-0000-4000-b600-000000000002"],
+  ["dave", "00000000-0000-4000-b600-000000000003"],
+  ["engineering", "00000000-0000-4000-b600-000000000004"],
+  ["planning", "00000000-0000-4000-b600-000000000005"],
 ]);
 
 function uuid(name: string): string {
@@ -30,7 +32,7 @@ function uuid(name: string): string {
   return id;
 }
 
-describe("Direct Access Conformance", () => {
+describe("Blocklists Conformance", () => {
   let db: Kysely<DB>;
   let storeId: string;
   let authorizationModelId: string;
@@ -45,8 +47,19 @@ describe("Direct Access Conformance", () => {
 
     // Write relation configs
     await tsfgaClient.writeRelationConfig({
+      objectType: "team",
+      relation: "member",
+      directlyAssignableTypes: ["user"],
+      impliedBy: null,
+      computedUserset: null,
+      tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
+      allowsUsersetSubjects: false,
+    });
+    await tsfgaClient.writeRelationConfig({
       objectType: "document",
-      relation: "viewer",
+      relation: "blocked",
       directlyAssignableTypes: ["user"],
       impliedBy: null,
       computedUserset: null,
@@ -58,33 +71,55 @@ describe("Direct Access Conformance", () => {
     await tsfgaClient.writeRelationConfig({
       objectType: "document",
       relation: "editor",
-      directlyAssignableTypes: ["user"],
+      directlyAssignableTypes: ["user", "team"],
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
-      excludedBy: null,
+      excludedBy: "blocked",
       intersection: null,
-      allowsUsersetSubjects: false,
+      allowsUsersetSubjects: true,
     });
 
     // Write tuples
     await tsfgaClient.addTuple({
-      objectType: "document",
-      objectId: uuid("meeting_notes"),
-      relation: "editor",
+      objectType: "team",
+      objectId: uuid("engineering"),
+      relation: "member",
       subjectType: "user",
-      subjectId: uuid("bob"),
+      subjectId: uuid("becky"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "team",
+      objectId: uuid("engineering"),
+      relation: "member",
+      subjectType: "user",
+      subjectId: uuid("carl"),
+    });
+    await tsfgaClient.addTuple({
+      objectType: "document",
+      objectId: uuid("planning"),
+      relation: "editor",
+      subjectType: "team",
+      subjectId: uuid("engineering"),
+      subjectRelation: "member",
+    });
+    await tsfgaClient.addTuple({
+      objectType: "document",
+      objectId: uuid("planning"),
+      relation: "blocked",
+      subjectType: "user",
+      subjectId: uuid("carl"),
     });
 
     // Setup OpenFGA
-    storeId = await fgaCreateStore("direct-access-conformance");
+    storeId = await fgaCreateStore("blocklists-conformance");
     authorizationModelId = await fgaWriteModel(
       storeId,
-      "tests/conformance/direct-access/model.dsl",
+      "tests/conformance/blocklists/model.dsl",
     );
     await fgaWriteTuples(
       storeId,
-      "tests/conformance/direct-access/tuples.yaml",
+      "tests/conformance/blocklists/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );
@@ -95,65 +130,81 @@ describe("Direct Access Conformance", () => {
     await destroyDb();
   });
 
-  test("1: bob is editor of document:meeting_notes", async () => {
+  test("1: becky is editor of document:planning (in team, not blocked)", async () => {
     await expectConformance(
       storeId,
       authorizationModelId,
       tsfgaClient,
       {
         objectType: "document",
-        objectId: uuid("meeting_notes"),
+        objectId: uuid("planning"),
         relation: "editor",
         subjectType: "user",
-        subjectId: uuid("bob"),
+        subjectId: uuid("becky"),
       },
       true,
     );
   });
 
-  test("2: bob is NOT viewer of document:meeting_notes", async () => {
+  test("2: carl is NOT editor of document:planning (in team but blocked)", async () => {
     await expectConformance(
       storeId,
       authorizationModelId,
       tsfgaClient,
       {
         objectType: "document",
-        objectId: uuid("meeting_notes"),
-        relation: "viewer",
-        subjectType: "user",
-        subjectId: uuid("bob"),
-      },
-      false,
-    );
-  });
-
-  test("3: alice is NOT editor of document:meeting_notes", async () => {
-    await expectConformance(
-      storeId,
-      authorizationModelId,
-      tsfgaClient,
-      {
-        objectType: "document",
-        objectId: uuid("meeting_notes"),
+        objectId: uuid("planning"),
         relation: "editor",
         subjectType: "user",
-        subjectId: uuid("alice"),
+        subjectId: uuid("carl"),
       },
       false,
     );
   });
 
-  test("4: alice is NOT viewer of document:meeting_notes", async () => {
+  test("3: carl IS blocked on document:planning", async () => {
     await expectConformance(
       storeId,
       authorizationModelId,
       tsfgaClient,
       {
         objectType: "document",
-        objectId: uuid("meeting_notes"),
-        relation: "viewer",
+        objectId: uuid("planning"),
+        relation: "blocked",
         subjectType: "user",
-        subjectId: uuid("alice"),
+        subjectId: uuid("carl"),
+      },
+      true,
+    );
+  });
+
+  test("4: becky is NOT blocked on document:planning", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("planning"),
+        relation: "blocked",
+        subjectType: "user",
+        subjectId: uuid("becky"),
+      },
+      false,
+    );
+  });
+
+  test("5: dave is NOT editor of document:planning (not in team)", async () => {
+    await expectConformance(
+      storeId,
+      authorizationModelId,
+      tsfgaClient,
+      {
+        objectType: "document",
+        objectId: uuid("planning"),
+        relation: "editor",
+        subjectType: "user",
+        subjectId: uuid("dave"),
       },
       false,
     );

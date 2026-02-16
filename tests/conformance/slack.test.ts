@@ -57,6 +57,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -66,6 +68,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: ["legacy_admin"],
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -75,6 +79,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: ["channels_admin"],
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -84,6 +90,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -93,6 +101,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: true,
     });
     await tsfgaClient.writeRelationConfig({
@@ -102,6 +112,8 @@ describe("Slack Model Conformance", () => {
       impliedBy: ["writer"],
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: true,
     });
 

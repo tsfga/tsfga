@@ -53,6 +53,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: ["channels_admin"],
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
 
@@ -78,6 +80,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: null,
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
       await store.upsertRelationConfig({
@@ -87,6 +91,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: null,
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: true,
       });
 
@@ -103,6 +109,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: null,
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
       expect(await store.deleteRelationConfig("workspace", "member")).toBe(
@@ -128,6 +136,8 @@ describe("KyselyTupleStore", () => {
           tupleset: "organization",
           computedUserset: "member",
         },
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
 
@@ -477,6 +487,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: null,
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
 
@@ -495,6 +507,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: ["channels_admin"],
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
       await store.upsertRelationConfig({
@@ -504,6 +518,8 @@ describe("KyselyTupleStore", () => {
         impliedBy: null,
         computedUserset: null,
         tupleToUserset: null,
+        excludedBy: null,
+        intersection: null,
         allowsUsersetSubjects: false,
       });
 

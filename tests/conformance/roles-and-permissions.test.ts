@@ -51,6 +51,8 @@ describe("Roles and Permissions Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -60,6 +62,8 @@ describe("Roles and Permissions Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -69,6 +73,8 @@ describe("Roles and Permissions Conformance", () => {
       impliedBy: null,
       computedUserset: "owner",
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -78,6 +84,8 @@ describe("Roles and Permissions Conformance", () => {
       impliedBy: ["viewer", "owner"],
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
 

@@ -52,6 +52,8 @@ describe("Public Access Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
 

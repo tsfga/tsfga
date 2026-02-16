@@ -3,6 +3,7 @@ import type {
   AddTupleRequest,
   ConditionDefinition,
   ConditionParameterType,
+  IntersectionOperand,
   RelationConfig,
   RemoveTupleRequest,
   Tuple,
@@ -96,6 +97,8 @@ export class KyselyTupleStore implements TupleStore {
       impliedBy: row.implied_by,
       computedUserset: row.computed_userset,
       tupleToUserset: ttu,
+      excludedBy: row.excluded_by,
+      intersection: row.intersection as IntersectionOperand[] | null,
       allowsUsersetSubjects: row.allows_userset_subjects,
     };
   }
@@ -216,6 +219,13 @@ export class KyselyTupleStore implements TupleStore {
   }
 
   async upsertRelationConfig(config: RelationConfig): Promise<void> {
+    const ttuJson = config.tupleToUserset
+      ? JSON.stringify(config.tupleToUserset)
+      : null;
+    const intersectionJson = config.intersection
+      ? JSON.stringify(config.intersection)
+      : null;
+
     await this.db
       .insertInto("tsfga.relation_configs")
       .values({
@@ -224,9 +234,9 @@ export class KyselyTupleStore implements TupleStore {
         directly_assignable_types: config.directlyAssignableTypes ?? null,
         implied_by: config.impliedBy ?? null,
         computed_userset: config.computedUserset ?? null,
-        tuple_to_userset: config.tupleToUserset
-          ? JSON.stringify(config.tupleToUserset)
-          : null,
+        tuple_to_userset: ttuJson,
+        excluded_by: config.excludedBy ?? null,
+        intersection: intersectionJson,
         allows_userset_subjects: config.allowsUsersetSubjects,
       })
       .onConflict((oc) =>
@@ -234,9 +244,9 @@ export class KyselyTupleStore implements TupleStore {
           directly_assignable_types: config.directlyAssignableTypes ?? null,
           implied_by: config.impliedBy ?? null,
           computed_userset: config.computedUserset ?? null,
-          tuple_to_userset: config.tupleToUserset
-            ? JSON.stringify(config.tupleToUserset)
-            : null,
+          tuple_to_userset: ttuJson,
+          excluded_by: config.excludedBy ?? null,
+          intersection: intersectionJson,
           allows_userset_subjects: config.allowsUsersetSubjects,
         }),
       )

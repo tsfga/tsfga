@@ -92,8 +92,10 @@ export interface TsfgaRelationConfigs {
   allows_userset_subjects: boolean;
   computed_userset: string | null;
   directly_assignable_types: string[] | null;
+  excluded_by: string | null;
   id: Generated<Int8>;
   implied_by: string[] | null;
+  intersection: Json | null;
   metadata: Json | null;
   object_type: string;
   relation: string;

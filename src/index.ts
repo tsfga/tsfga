@@ -161,6 +161,7 @@ export type {
   CheckRequest,
   ConditionDefinition,
   ConditionParameterType,
+  IntersectionOperand,
   RelationConfig,
   RemoveTupleRequest,
   Tuple,

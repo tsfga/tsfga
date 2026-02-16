@@ -25,6 +25,8 @@ function makeConfig(overrides: Partial<RelationConfig> = {}): RelationConfig {
     impliedBy: null,
     computedUserset: null,
     tupleToUserset: null,
+    excludedBy: null,
+    intersection: null,
     allowsUsersetSubjects: false,
     ...overrides,
   };
@@ -533,6 +535,211 @@ describe("check algorithm", () => {
           objectType: "repo",
           objectId: "myrepo",
           relation: "reader",
+          subjectType: "user",
+          subjectId: "bob",
+        }),
+      ).toBe(false);
+    });
+  });
+
+  describe("Exclusion (but not)", () => {
+    test("denies access when user has excluded relation", async () => {
+      store.relationConfigs.push(
+        makeConfig({
+          objectType: "doc",
+          relation: "editor",
+          directlyAssignableTypes: ["user"],
+          excludedBy: "blocked",
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "blocked",
+          directlyAssignableTypes: ["user"],
+        }),
+      );
+      store.tuples.push(
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "editor",
+          subjectType: "user",
+          subjectId: "carl",
+        }),
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "blocked",
+          subjectType: "user",
+          subjectId: "carl",
+        }),
+      );
+
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "editor",
+          subjectType: "user",
+          subjectId: "carl",
+        }),
+      ).toBe(false);
+    });
+
+    test("allows access when user does NOT have excluded relation", async () => {
+      store.relationConfigs.push(
+        makeConfig({
+          objectType: "doc",
+          relation: "editor",
+          directlyAssignableTypes: ["user"],
+          excludedBy: "blocked",
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "blocked",
+          directlyAssignableTypes: ["user"],
+        }),
+      );
+      store.tuples.push(
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "editor",
+          subjectType: "user",
+          subjectId: "becky",
+        }),
+      );
+
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "editor",
+          subjectType: "user",
+          subjectId: "becky",
+        }),
+      ).toBe(true);
+    });
+  });
+
+  describe("Intersection (and)", () => {
+    test("grants access when all operands are true", async () => {
+      store.relationConfigs.push(
+        makeConfig({
+          objectType: "doc",
+          relation: "can_delete",
+          intersection: [
+            { type: "computedUserset", relation: "writer" },
+            {
+              type: "tupleToUserset",
+              tupleset: "owner",
+              computedUserset: "member",
+            },
+          ],
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "writer",
+          directlyAssignableTypes: ["user"],
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "owner",
+          directlyAssignableTypes: ["org"],
+        }),
+        makeConfig({
+          objectType: "org",
+          relation: "member",
+          directlyAssignableTypes: ["user"],
+        }),
+      );
+      store.tuples.push(
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "writer",
+          subjectType: "user",
+          subjectId: "alice",
+        }),
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "owner",
+          subjectType: "org",
+          subjectId: "acme",
+        }),
+        makeTuple({
+          objectType: "org",
+          objectId: "acme",
+          relation: "member",
+          subjectType: "user",
+          subjectId: "alice",
+        }),
+      );
+
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "can_delete",
+          subjectType: "user",
+          subjectId: "alice",
+        }),
+      ).toBe(true);
+    });
+
+    test("denies access when one operand is false", async () => {
+      store.relationConfigs.push(
+        makeConfig({
+          objectType: "doc",
+          relation: "can_delete",
+          intersection: [
+            { type: "computedUserset", relation: "writer" },
+            {
+              type: "tupleToUserset",
+              tupleset: "owner",
+              computedUserset: "member",
+            },
+          ],
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "writer",
+          directlyAssignableTypes: ["user"],
+        }),
+        makeConfig({
+          objectType: "doc",
+          relation: "owner",
+          directlyAssignableTypes: ["org"],
+        }),
+        makeConfig({
+          objectType: "org",
+          relation: "member",
+          directlyAssignableTypes: ["user"],
+        }),
+      );
+      store.tuples.push(
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "writer",
+          subjectType: "user",
+          subjectId: "bob",
+        }),
+        makeTuple({
+          objectType: "doc",
+          objectId: "1",
+          relation: "owner",
+          subjectType: "org",
+          subjectId: "acme",
+        }),
+        // bob is NOT a member of org:acme
+      );
+
+      expect(
+        await check(store, {
+          objectType: "doc",
+          objectId: "1",
+          relation: "can_delete",
           subjectType: "user",
           subjectId: "bob",
         }),

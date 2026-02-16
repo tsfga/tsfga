@@ -1,16 +1,21 @@
 import { evaluateTupleCondition } from "src/core/conditions.ts";
-import type { CheckOptions, CheckRequest } from "src/core/types.ts";
+import type {
+  CheckOptions,
+  CheckRequest,
+  IntersectionOperand,
+  RelationConfig,
+} from "src/core/types.ts";
 import type { TupleStore } from "src/store/interface.ts";
 
 /**
- * 5-step recursive check algorithm.
- *
- * Steps:
- * 1. Direct tuple check
- * 2. Userset expansion
- * 3. Relation inheritance (implied_by)
- * 4. Computed userset
- * 5. Tuple-to-userset
+ * Recursive check algorithm with support for:
+ * - Direct tuple check + wildcard
+ * - Userset expansion
+ * - Relation inheritance (implied_by)
+ * - Computed userset
+ * - Tuple-to-userset
+ * - Exclusion (but not)
+ * - Intersection (and)
  */
 export async function check(
   store: TupleStore,
@@ -25,6 +30,56 @@ export async function check(
     return false;
   }
 
+  // Fetch relation config once for use across all steps
+  const config = await store.findRelationConfig(
+    request.objectType,
+    request.relation,
+  );
+
+  // If the relation has an intersection, ALL operands must be true
+  if (config?.intersection) {
+    return checkIntersection(
+      store,
+      request,
+      config.intersection,
+      options,
+      depth,
+    );
+  }
+
+  // Run the base check (steps 1-5)
+  const baseResult = await checkBase(store, request, config, options, depth);
+
+  // If base check passed and there's an exclusion, verify the user
+  // is NOT in the excluded relation
+  if (baseResult && config?.excludedBy) {
+    const isExcluded = await check(
+      store,
+      {
+        ...request,
+        relation: config.excludedBy,
+      },
+      options,
+      depth + 1,
+    );
+    if (isExcluded) {
+      return false;
+    }
+  }
+
+  return baseResult;
+}
+
+/**
+ * Base check: steps 1-5 without exclusion or intersection handling.
+ */
+async function checkBase(
+  store: TupleStore,
+  request: CheckRequest,
+  config: RelationConfig | null,
+  options: CheckOptions,
+  depth: number,
+): Promise<boolean> {
   // Step 1: Direct tuple check
   const directTuple = await store.findDirectTuple(
     request.objectType,
@@ -82,12 +137,6 @@ export async function check(
       return true;
     }
   }
-
-  // Fetch relation config ONCE for steps 3-5
-  const config = await store.findRelationConfig(
-    request.objectType,
-    request.relation,
-  );
 
   // Step 3: Relation inheritance (implied_by)
   if (config?.impliedBy) {
@@ -152,4 +201,63 @@ export async function check(
   }
 
   return false;
+}
+
+/**
+ * Intersection check: ALL operands must be true.
+ */
+async function checkIntersection(
+  store: TupleStore,
+  request: CheckRequest,
+  operands: IntersectionOperand[],
+  options: CheckOptions,
+  depth: number,
+): Promise<boolean> {
+  for (const operand of operands) {
+    if (operand.type === "computedUserset") {
+      const hasRelation = await check(
+        store,
+        {
+          ...request,
+          relation: operand.relation,
+        },
+        options,
+        depth + 1,
+      );
+      if (!hasRelation) {
+        return false;
+      }
+    } else {
+      // tupleToUserset operand
+      const linkedTuples = await store.findTuplesByRelation(
+        request.objectType,
+        request.objectId,
+        operand.tupleset,
+      );
+      let found = false;
+      for (const linked of linkedTuples) {
+        const hasRelation = await check(
+          store,
+          {
+            objectType: linked.subjectType,
+            objectId: linked.subjectId,
+            relation: operand.computedUserset,
+            subjectType: request.subjectType,
+            subjectId: request.subjectId,
+            context: request.context,
+          },
+          options,
+          depth + 1,
+        );
+        if (hasRelation) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return false;
+      }
+    }
+  }
+  return true;
 }

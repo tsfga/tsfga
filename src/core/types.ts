@@ -10,6 +10,11 @@ export interface Tuple {
   conditionContext: Record<string, unknown> | null;
 }
 
+/** An operand in an intersection expression */
+export type IntersectionOperand =
+  | { type: "computedUserset"; relation: string }
+  | { type: "tupleToUserset"; tupleset: string; computedUserset: string };
+
 /** Configuration for a relation on an object type */
 export interface RelationConfig {
   objectType: string;
@@ -18,6 +23,8 @@ export interface RelationConfig {
   impliedBy: string[] | null;
   computedUserset: string | null;
   tupleToUserset: { tupleset: string; computedUserset: string } | null;
+  excludedBy: string | null;
+  intersection: IntersectionOperand[] | null;
   allowsUsersetSubjects: boolean;
 }
 

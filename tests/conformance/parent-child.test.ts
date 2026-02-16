@@ -53,6 +53,8 @@ describe("Parent-Child Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -62,6 +64,8 @@ describe("Parent-Child Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: null,
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
     await tsfgaClient.writeRelationConfig({
@@ -71,6 +75,8 @@ describe("Parent-Child Conformance", () => {
       impliedBy: null,
       computedUserset: null,
       tupleToUserset: { tupleset: "parent", computedUserset: "editor" },
+      excludedBy: null,
+      intersection: null,
       allowsUsersetSubjects: false,
     });
 

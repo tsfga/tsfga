@@ -1,0 +1,12 @@
+- user: user:becky
+  relation: member
+  object: team:engineering
+- user: user:carl
+  relation: member
+  object: team:engineering
+- user: team:engineering#member
+  relation: editor
+  object: document:planning
+- user: user:carl
+  relation: blocked
+  object: document:planning
