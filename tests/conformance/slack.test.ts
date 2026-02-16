@@ -197,11 +197,11 @@ describe("Slack Model Conformance", () => {
     storeId = await fgaCreateStore("slack-conformance");
     authorizationModelId = await fgaWriteModel(
       storeId,
-      "examples/slack/model.dsl",
+      "tests/conformance/slack/model.dsl",
     );
     await fgaWriteTuples(
       storeId,
-      "examples/slack/tuples.yaml",
+      "tests/conformance/slack/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );

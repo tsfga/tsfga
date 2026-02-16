@@ -65,16 +65,15 @@ tsfga/
 │   ├── store/                   # Integration tests (real PostgreSQL)
 │   │   └── kysely-adapter.test.ts
 │   ├── conformance/             # OpenFGA conformance tests
-│   │   └── slack.test.ts
+│   │   ├── slack.test.ts
+│   │   └── slack/
+│   │       ├── model.dsl        # OpenFGA DSL model
+│   │       └── tuples.yaml      # Relationship tuples
 │   └── helpers/
 │       ├── mock-store.ts        # In-memory TupleStore for unit tests
 │       ├── conformance.ts       # expectConformance() helper
 │       ├── openfga.ts           # OpenFGA SDK client operations
 │       └── preload.ts           # Infrastructure setup (Docker)
-├── examples/
-│   └── slack/
-│       ├── model.dsl            # OpenFGA DSL
-│       └── tuples.yaml          # Relationship tuples
 ├── compose.yaml                 # PostgreSQL + OpenFGA services
 ├── .env                         # Environment variables
 ├── package.json
@@ -731,12 +730,12 @@ describe("Slack Model Conformance", () => {
     tsfgaClient = createTsfga(store);
 
     // Write relation configs matching the Slack model
-    // Write tuples matching examples/slack/tuples.yaml
+    // Write tuples matching tests/conformance/slack/tuples.yaml
 
     // Setup OpenFGA
     storeId = await fgaCreateStore("slack-test");
-    await fgaWriteModel(storeId, "examples/slack/model.dsl");
-    await fgaWriteTuples(storeId, "examples/slack/tuples.yaml");
+    await fgaWriteModel(storeId, "tests/conformance/slack/model.dsl");
+    await fgaWriteTuples(storeId, "tests/conformance/slack/tuples.yaml");
   });
 
   // ... 28 check assertions using expectConformance()
