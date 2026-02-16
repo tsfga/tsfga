@@ -44,36 +44,24 @@ export async function check(
 
   // If the relation has an intersection, ALL operands must be true
   if (config?.intersection) {
-    return checkIntersection(
-      store,
-      request,
-      config.intersection,
-      options,
-      depth,
-    );
+    return checkIntersection(store, request, config, options, depth);
   }
 
-  // Run the base check (steps 1-5)
-  const baseResult = await checkBase(store, request, config, options, depth);
-
-  // If base check passed and there's an exclusion, verify the user
-  // is NOT in the excluded relation
-  if (baseResult && config?.excludedBy) {
-    const isExcluded = await check(
-      store,
-      {
-        ...request,
-        relation: config.excludedBy,
-      },
-      options,
-      depth + 1,
-    );
-    if (isExcluded) {
-      return false;
-    }
+  // Run the base check and exclusion in parallel when excludedBy is set
+  if (config?.excludedBy) {
+    const [baseResult, isExcluded] = await Promise.all([
+      checkBase(store, request, config, options, depth),
+      check(
+        store,
+        { ...request, relation: config.excludedBy },
+        options,
+        depth + 1,
+      ),
+    ]);
+    return baseResult && !isExcluded;
   }
 
-  return baseResult;
+  return checkBase(store, request, config, options, depth);
 }
 
 /**
@@ -86,128 +74,138 @@ async function checkBase(
   options: CheckOptions,
   depth: number,
 ): Promise<boolean> {
-  // Step 1: Direct tuple check
-  const directTuple = await store.findDirectTuple(
-    request.objectType,
-    request.objectId,
-    request.relation,
-    request.subjectType,
-    request.subjectId,
-  );
+  // Batch initial reads: direct, wildcard, and userset tuples
+  const [directTuple, wildcardTuple, usersetTuples] = await Promise.all([
+    store.findDirectTuple(
+      request.objectType,
+      request.objectId,
+      request.relation,
+      request.subjectType,
+      request.subjectId,
+    ),
+    store.findDirectTuple(
+      request.objectType,
+      request.objectId,
+      request.relation,
+      request.subjectType,
+      "*",
+    ),
+    store.findUsersetTuples(
+      request.objectType,
+      request.objectId,
+      request.relation,
+    ),
+  ]);
+
+  // Step 1: Direct tuple fast path
   if (directTuple) {
     if (await evaluateTupleCondition(store, directTuple, request.context)) {
       return true;
     }
   }
 
-  // Step 1b: Wildcard check (e.g., user:*)
-  const wildcardTuple = await store.findDirectTuple(
-    request.objectType,
-    request.objectId,
-    request.relation,
-    request.subjectType,
-    "*",
-  );
+  // Step 1b: Wildcard fast path
   if (wildcardTuple) {
     if (await evaluateTupleCondition(store, wildcardTuple, request.context)) {
       return true;
     }
   }
 
-  // Step 2: Userset expansion
-  const usersetTuples = await store.findUsersetTuples(
-    request.objectType,
-    request.objectId,
-    request.relation,
-  );
-  for (const userset of usersetTuples) {
-    if (!(await evaluateTupleCondition(store, userset, request.context))) {
-      continue;
-    }
-    // subjectRelation is guaranteed non-null by findUsersetTuples
-    const relation = userset.subjectRelation as string;
-    const hasRelation = await check(
-      store,
-      {
-        objectType: userset.subjectType,
-        objectId: userset.subjectId,
-        relation,
-        subjectType: request.subjectType,
-        subjectId: request.subjectId,
-        context: request.context,
-      },
-      options,
-      depth + 1,
-    );
-    if (hasRelation) {
-      return true;
-    }
-  }
+  // Collect all sub-check handlers for concurrent resolution
+  const handlers: Array<() => Promise<boolean>> = [];
 
-  // Step 3: Relation inheritance (implied_by)
-  if (config?.impliedBy) {
-    for (const impliedRelation of config.impliedBy) {
-      const hasRelation = await check(
+  // Step 2: Userset expansion handlers
+  for (const userset of usersetTuples) {
+    const relation = userset.subjectRelation as string;
+    handlers.push(async () => {
+      if (!(await evaluateTupleCondition(store, userset, request.context))) {
+        return false;
+      }
+      return check(
         store,
         {
-          ...request,
-          relation: impliedRelation,
+          objectType: userset.subjectType,
+          objectId: userset.subjectId,
+          relation,
+          subjectType: request.subjectType,
+          subjectId: request.subjectId,
+          context: request.context,
         },
         options,
         depth + 1,
       );
-      if (hasRelation) {
-        return true;
-      }
-    }
+    });
   }
 
-  // Step 4: Computed userset
-  if (config?.computedUserset) {
-    const hasRelation = await check(
-      store,
-      {
-        ...request,
-        relation: config.computedUserset,
-      },
-      options,
-      depth + 1,
-    );
-    if (hasRelation) {
-      return true;
-    }
-  }
-
-  // Step 5: Tuple-to-userset
-  if (config?.tupleToUserset) {
-    for (const { tupleset, computedUserset } of config.tupleToUserset) {
-      const linkedTuples = await store.findTuplesByRelation(
-        request.objectType,
-        request.objectId,
-        tupleset,
-      );
-      for (const linked of linkedTuples) {
-        const hasRelation = await check(
+  // Step 3: Relation inheritance (implied_by) handlers
+  if (config?.impliedBy) {
+    for (const impliedRelation of config.impliedBy) {
+      handlers.push(() =>
+        check(
           store,
-          {
-            objectType: linked.subjectType,
-            objectId: linked.subjectId,
-            relation: computedUserset,
-            subjectType: request.subjectType,
-            subjectId: request.subjectId,
-            context: request.context,
-          },
+          { ...request, relation: impliedRelation },
           options,
           depth + 1,
-        );
-        if (hasRelation) {
-          return true;
-        }
-      }
+        ),
+      );
     }
   }
 
-  return false;
+  // Step 4: Computed userset handler
+  if (config?.computedUserset) {
+    handlers.push(() =>
+      check(
+        store,
+        { ...request, relation: config.computedUserset as string },
+        options,
+        depth + 1,
+      ),
+    );
+  }
+
+  // Step 5: Tuple-to-userset composite handler
+  if (config?.tupleToUserset) {
+    const ttuEntries = config.tupleToUserset;
+    handlers.push(async () => {
+      // Batch all tupleset lookups
+      const linkedResults = await Promise.all(
+        ttuEntries.map(({ tupleset }) =>
+          store.findTuplesByRelation(
+            request.objectType,
+            request.objectId,
+            tupleset,
+          ),
+        ),
+      );
+
+      // Collect all linked-tuple check handlers
+      const ttuHandlers: Array<() => Promise<boolean>> = [];
+      for (const [i, { computedUserset }] of ttuEntries.entries()) {
+        const linkedTuples = linkedResults[i] ?? [];
+        for (const linked of linkedTuples) {
+          ttuHandlers.push(() =>
+            check(
+              store,
+              {
+                objectType: linked.subjectType,
+                objectId: linked.subjectId,
+                relation: computedUserset,
+                subjectType: request.subjectType,
+                subjectId: request.subjectId,
+                context: request.context,
+              },
+              options,
+              depth + 1,
+            ),
+          );
+        }
+      }
+
+      return resolveUnion(ttuHandlers);
+    });
+  }
+
+  return resolveUnion(handlers);
 }
 
 /**
@@ -216,71 +214,116 @@ async function checkBase(
 async function checkIntersection(
   store: TupleStore,
   request: CheckRequest,
-  operands: IntersectionOperand[],
+  config: RelationConfig,
   options: CheckOptions,
   depth: number,
 ): Promise<boolean> {
-  for (const operand of operands) {
+  const handlers: Array<() => Promise<boolean>> = [];
+
+  for (const operand of config.intersection as IntersectionOperand[]) {
     if (operand.type === "direct") {
-      // Check direct assignment + userset (steps 1-2 of base check)
-      const config = await store.findRelationConfig(
-        request.objectType,
-        request.relation,
-      );
-      const hasRelation = await checkBase(
-        store,
-        request,
-        config,
-        options,
-        depth,
-      );
-      if (!hasRelation) {
-        return false;
-      }
+      handlers.push(() => checkBase(store, request, config, options, depth));
     } else if (operand.type === "computedUserset") {
-      const hasRelation = await check(
-        store,
-        {
-          ...request,
-          relation: operand.relation,
-        },
-        options,
-        depth + 1,
-      );
-      if (!hasRelation) {
-        return false;
-      }
-    } else {
-      // tupleToUserset operand
-      const linkedTuples = await store.findTuplesByRelation(
-        request.objectType,
-        request.objectId,
-        operand.tupleset,
-      );
-      let found = false;
-      for (const linked of linkedTuples) {
-        const hasRelation = await check(
+      handlers.push(() =>
+        check(
           store,
-          {
-            objectType: linked.subjectType,
-            objectId: linked.subjectId,
-            relation: operand.computedUserset,
-            subjectType: request.subjectType,
-            subjectId: request.subjectId,
-            context: request.context,
-          },
+          { ...request, relation: operand.relation },
           options,
           depth + 1,
+        ),
+      );
+    } else {
+      // tupleToUserset operand
+      handlers.push(async () => {
+        const linkedTuples = await store.findTuplesByRelation(
+          request.objectType,
+          request.objectId,
+          operand.tupleset,
         );
-        if (hasRelation) {
-          found = true;
-          break;
+        const ttuHandlers: Array<() => Promise<boolean>> = [];
+        for (const linked of linkedTuples) {
+          ttuHandlers.push(() =>
+            check(
+              store,
+              {
+                objectType: linked.subjectType,
+                objectId: linked.subjectId,
+                relation: operand.computedUserset,
+                subjectType: request.subjectType,
+                subjectId: request.subjectId,
+                context: request.context,
+              },
+              options,
+              depth + 1,
+            ),
+          );
         }
-      }
-      if (!found) {
-        return false;
-      }
+        return resolveUnion(ttuHandlers);
+      });
     }
   }
-  return true;
+
+  return resolveIntersection(handlers);
+}
+
+/**
+ * Run handlers concurrently. Resolves true on first true (short-circuit).
+ * Resolves false when all return false. Rejects on first error.
+ */
+async function resolveUnion(
+  handlers: Array<() => Promise<boolean>>,
+): Promise<boolean> {
+  if (handlers.length === 0) {
+    return false;
+  }
+
+  return new Promise((resolve, reject) => {
+    let remaining = handlers.length;
+    for (const handler of handlers) {
+      handler().then(
+        (result) => {
+          if (result) {
+            resolve(true);
+          } else {
+            remaining--;
+            if (remaining === 0) {
+              resolve(false);
+            }
+          }
+        },
+        (error) => reject(error),
+      );
+    }
+  });
+}
+
+/**
+ * Run handlers concurrently. Resolves false on first false (short-circuit).
+ * Resolves true when all return true. Rejects on first error.
+ */
+async function resolveIntersection(
+  handlers: Array<() => Promise<boolean>>,
+): Promise<boolean> {
+  if (handlers.length === 0) {
+    return true;
+  }
+
+  return new Promise((resolve, reject) => {
+    let remaining = handlers.length;
+    for (const handler of handlers) {
+      handler().then(
+        (result) => {
+          if (!result) {
+            resolve(false);
+          } else {
+            remaining--;
+            if (remaining === 0) {
+              resolve(true);
+            }
+          }
+        },
+        (error) => reject(error),
+      );
+    }
+  });
 }
