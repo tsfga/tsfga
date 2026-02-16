@@ -120,12 +120,14 @@ export interface ConditionDefinition {
 export type ConditionParameterType =
   | "string"
   | "int"
+  | "uint"
   | "bool"
   | "double"
   | "duration"
   | "timestamp"
   | "list"
-  | "map";
+  | "map"
+  | "any";
 
 /** Parameters for a check request */
 export interface CheckRequest {

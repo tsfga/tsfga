@@ -148,4 +148,20 @@ describe("evaluateTupleCondition", () => {
       false,
     );
   });
+
+  test("handles uint comparisons", async () => {
+    const store = new MockTupleStore();
+    store.conditionDefinitions.push({
+      name: "under_limit",
+      expression: "count < limit",
+      parameters: { count: "uint", limit: "uint" },
+    });
+    const tuple = makeTuple({ conditionName: "under_limit" });
+    expect(
+      await evaluateTupleCondition(store, tuple, { count: 5, limit: 10 }),
+    ).toBe(true);
+    expect(
+      await evaluateTupleCondition(store, tuple, { count: 10, limit: 10 }),
+    ).toBe(false);
+  });
 });
