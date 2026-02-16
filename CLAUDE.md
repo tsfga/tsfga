@@ -957,6 +957,18 @@ preload = ["./tests/helpers/preload.ts"]
 }
 ```
 
+## Git Commit Messages
+
+- **Never** use conventional commit format (`feat:`, `fix:`, `chore:`, etc.)
+- Header is a single line of **at most 50 characters**, in imperative
+  mood, starting with a capital letter, that meaningfully summarizes
+  the change (shown by `gitk`, `git shortlog`)
+- Body explains the *why* — motivation, background, reasoning for the
+  chosen approach — not just *what* changed (the diff shows that)
+- Wrap body paragraphs at ~74 columns
+- Use imperative verbs: "Fix ...", "Add ...", "Make ...",
+  "Refactor ...", "Remove ..."
+
 ## Anti-Patterns (DO NOT)
 
 - **No session context coupling.** pgfga uses `set_config`/`current_setting`
