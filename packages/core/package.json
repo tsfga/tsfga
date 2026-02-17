@@ -11,8 +11,8 @@
   "files": ["dist", "src"],
   "scripts": {
     "build": "tsup",
-    "tsc": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "tsc": "tsc --noEmit"
   },
   "dependencies": {
     "@marcbachmann/cel-js": "7.5.0"

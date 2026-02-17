@@ -12,9 +12,6 @@
       "dependsOn": ["^build"],
       "cache": false
     },
-    "check": {
-      "dependsOn": ["^build"]
-    },
     "db:latest": {
       "cache": false
     },

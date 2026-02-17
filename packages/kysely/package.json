@@ -11,11 +11,11 @@
   "files": ["dist", "src"],
   "scripts": {
     "build": "tsup",
-    "tsc": "tsc --noEmit",
-    "test": "bun test",
+    "db:generate": "bunx kysely-codegen --out-file src/schema.ts",
     "db:latest": "kysely migrate:latest",
     "db:rollback": "kysely migrate:rollback --all",
-    "db:generate": "bunx kysely-codegen --out-file src/schema.ts"
+    "test": "bun test",
+    "tsc": "tsc --noEmit"
   },
   "peerDependencies": {
     "@tsfga/core": "workspace:*",

@@ -879,15 +879,17 @@ Turborepo task pipeline. `build` depends on `^build` (dependency chain).
 
 ### `tsconfig.base.json`
 
-Shared compiler options for all packages. Includes `composite: true`,
-`declaration: true`, `declarationMap: true` for project references.
+Shared compiler options for all packages. Has `noEmit: true` (type
+checking only). No `composite`, `declaration`, or `declarationMap` — those
+live in per-package `tsconfig.build.json` files for tsup DTS generation.
 No path aliases — packages use relative imports internally and
 `@tsfga/core`/`@tsfga/kysely` across packages.
 
 ### `tsconfig.json` (root)
 
-References-only file for whole-repo `tsc --build`. Points to all three
-packages/workspaces.
+Extends `tsconfig.base.json` and includes all source/test files across
+the three workspaces. Used for whole-repo type checking (not `tsc --build`
+or project references — turbo handles dependency ordering).
 
 ### `biome.json`
 
