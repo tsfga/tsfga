@@ -26,10 +26,10 @@
     "release": "turbo run build && changeset publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.0",
-    "@changesets/cli": "2.29.4",
-    "turbo": "2.5.3",
-    "tsup": "8.5.0",
+    "@biomejs/biome": "2.4.2",
+    "@changesets/cli": "2.29.8",
+    "turbo": "2.8.9",
+    "tsup": "8.5.1",
     "typescript": "5.9.3"
   }
 }
