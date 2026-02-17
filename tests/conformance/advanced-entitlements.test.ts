@@ -1,20 +1,20 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
+import { createTsfga, type TsfgaClient } from "@tsfga/core";
+import type { DB } from "@tsfga/kysely";
+import { KyselyTupleStore } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import { createTsfga, type TsfgaClient } from "src/index.ts";
-import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
-import type { DB } from "src/store/kysely/schema.ts";
-import { expectConformance } from "tests/helpers/conformance.ts";
+import { expectConformance } from "./helpers/conformance.ts";
 import {
   beginTransaction,
   destroyDb,
   getDb,
   rollbackTransaction,
-} from "tests/helpers/db.ts";
+} from "./helpers/db.ts";
 import {
   fgaCreateStore,
   fgaWriteModel,
   fgaWriteTuples,
-} from "tests/helpers/openfga.ts";
+} from "./helpers/openfga.ts";
 
 // Ref: OpenFGA sample store "advanced-entitlements"
 // Tests CEL conditions with int comparisons, multiple condition definitions,
@@ -249,11 +249,11 @@ describe("Advanced Entitlements Conformance", () => {
     storeId = await fgaCreateStore("advanced-entitlements-conformance");
     authorizationModelId = await fgaWriteModel(
       storeId,
-      "tests/conformance/advanced-entitlements/model.dsl",
+      "./advanced-entitlements/model.dsl",
     );
     await fgaWriteTuples(
       storeId,
-      "tests/conformance/advanced-entitlements/tuples.yaml",
+      "./advanced-entitlements/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );

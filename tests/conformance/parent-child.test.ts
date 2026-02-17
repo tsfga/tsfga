@@ -1,20 +1,20 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
+import { createTsfga, type TsfgaClient } from "@tsfga/core";
+import type { DB } from "@tsfga/kysely";
+import { KyselyTupleStore } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import { createTsfga, type TsfgaClient } from "src/index.ts";
-import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
-import type { DB } from "src/store/kysely/schema.ts";
-import { expectConformance } from "tests/helpers/conformance.ts";
+import { expectConformance } from "./helpers/conformance.ts";
 import {
   beginTransaction,
   destroyDb,
   getDb,
   rollbackTransaction,
-} from "tests/helpers/db.ts";
+} from "./helpers/db.ts";
 import {
   fgaCreateStore,
   fgaWriteModel,
   fgaWriteTuples,
-} from "tests/helpers/openfga.ts";
+} from "./helpers/openfga.ts";
 
 // Ref: https://openfga.dev/docs/modeling/parent-child
 
@@ -107,11 +107,11 @@ describe("Parent-Child Conformance", () => {
     storeId = await fgaCreateStore("parent-child-conformance");
     authorizationModelId = await fgaWriteModel(
       storeId,
-      "tests/conformance/parent-child/model.dsl",
+      "./parent-child/model.dsl",
     );
     await fgaWriteTuples(
       storeId,
-      "tests/conformance/parent-child/tuples.yaml",
+      "./parent-child/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );

@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
+import type { TsfgaClient } from "@tsfga/core";
+import type { DB } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import type { TsfgaClient } from "src/index.ts";
-import type { DB } from "src/store/kysely/schema.ts";
+import { expectConformance } from "./helpers/conformance.ts";
 import {
   setupTheopenlane,
   teardownTheopenlane,
   uuid,
-} from "tests/conformance/theopenlane/setup.ts";
-import { expectConformance } from "tests/helpers/conformance.ts";
+} from "./theopenlane/setup.ts";
 
 describe("TheOpenLane — Programs", () => {
   let db: Kysely<DB>;

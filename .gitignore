@@ -1,2 +1,5 @@
-node_modules
 .env*
+.turbo
+*.tsbuildinfo
+dist
+node_modules

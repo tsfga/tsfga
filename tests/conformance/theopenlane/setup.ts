@@ -1,19 +1,22 @@
+import {
+  type AddTupleRequest,
+  createTsfga,
+  type RelationConfig,
+  type TsfgaClient,
+} from "@tsfga/core";
+import { type DB, KyselyTupleStore } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import type { AddTupleRequest, RelationConfig } from "src/core/types.ts";
-import { createTsfga, type TsfgaClient } from "src/index.ts";
-import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
-import type { DB } from "src/store/kysely/schema.ts";
 import {
   beginTransaction,
   destroyDb,
   getDb,
   rollbackTransaction,
-} from "tests/helpers/db.ts";
+} from "../helpers/db.ts";
 import {
   fgaCreateStore,
   fgaWriteModel,
   fgaWriteTuples,
-} from "tests/helpers/openfga.ts";
+} from "../helpers/openfga.ts";
 
 // Ref: TheOpenLane authorization model
 // https://github.com/theopenlane/core/blob/b678367/fga/model/model.fga
@@ -2286,11 +2289,11 @@ export async function setupTheopenlane(): Promise<TheopenlaneSetup> {
   const storeId = await fgaCreateStore("theopenlane-conformance");
   const authorizationModelId = await fgaWriteModel(
     storeId,
-    "tests/conformance/theopenlane/model.dsl",
+    "./theopenlane/model.dsl",
   );
   await fgaWriteTuples(
     storeId,
-    "tests/conformance/theopenlane/tuples.yaml",
+    "./theopenlane/tuples.yaml",
     authorizationModelId,
     uuidMap,
   );

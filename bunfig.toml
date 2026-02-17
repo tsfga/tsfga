@@ -1,9 +1,0 @@
-[install]
-exact = true
-
-[test]
-# Allow time for conformance tests
-timeout = 120000
-
-# Preload global setup before running tests
-preload = ["./tests/helpers/preload.ts"]

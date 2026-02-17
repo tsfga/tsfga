@@ -1,20 +1,20 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
+import { createTsfga, type TsfgaClient } from "@tsfga/core";
+import type { DB } from "@tsfga/kysely";
+import { KyselyTupleStore } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import { createTsfga, type TsfgaClient } from "src/index.ts";
-import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
-import type { DB } from "src/store/kysely/schema.ts";
-import { expectConformance } from "tests/helpers/conformance.ts";
+import { expectConformance } from "./helpers/conformance.ts";
 import {
   beginTransaction,
   destroyDb,
   getDb,
   rollbackTransaction,
-} from "tests/helpers/db.ts";
+} from "./helpers/db.ts";
 import {
   fgaCreateStore,
   fgaWriteModel,
   fgaWriteTuples,
-} from "tests/helpers/openfga.ts";
+} from "./helpers/openfga.ts";
 
 // Ref: https://openfga.dev/docs/modeling/custom-roles
 
@@ -117,11 +117,11 @@ describe("Custom Roles Conformance", () => {
     storeId = await fgaCreateStore("custom-roles-conformance");
     authorizationModelId = await fgaWriteModel(
       storeId,
-      "tests/conformance/custom-roles/model.dsl",
+      "./custom-roles/model.dsl",
     );
     await fgaWriteTuples(
       storeId,
-      "tests/conformance/custom-roles/tuples.yaml",
+      "./custom-roles/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );

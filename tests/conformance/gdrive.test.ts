@@ -1,20 +1,20 @@
 import { afterAll, beforeAll, describe, test } from "bun:test";
+import { createTsfga, type TsfgaClient } from "@tsfga/core";
+import type { DB } from "@tsfga/kysely";
+import { KyselyTupleStore } from "@tsfga/kysely";
 import type { Kysely } from "kysely";
-import { createTsfga, type TsfgaClient } from "src/index.ts";
-import { KyselyTupleStore } from "src/store/kysely/adapter.ts";
-import type { DB } from "src/store/kysely/schema.ts";
-import { expectConformance } from "tests/helpers/conformance.ts";
+import { expectConformance } from "./helpers/conformance.ts";
 import {
   beginTransaction,
   destroyDb,
   getDb,
   rollbackTransaction,
-} from "tests/helpers/db.ts";
+} from "./helpers/db.ts";
 import {
   fgaCreateStore,
   fgaWriteModel,
   fgaWriteTuples,
-} from "tests/helpers/openfga.ts";
+} from "./helpers/openfga.ts";
 
 // Ref: OpenFGA sample store "gdrive"
 // Combines wildcards, group members, folder inheritance via TTU,
@@ -288,13 +288,10 @@ describe("Google Drive Model Conformance", () => {
 
     // Setup OpenFGA
     storeId = await fgaCreateStore("gdrive-conformance");
-    authorizationModelId = await fgaWriteModel(
-      storeId,
-      "tests/conformance/gdrive/model.dsl",
-    );
+    authorizationModelId = await fgaWriteModel(storeId, "./gdrive/model.dsl");
     await fgaWriteTuples(
       storeId,
-      "tests/conformance/gdrive/tuples.yaml",
+      "./gdrive/tuples.yaml",
       authorizationModelId,
       uuidMap,
     );

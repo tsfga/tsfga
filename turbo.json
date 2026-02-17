@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "tsc": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "check": {
+      "dependsOn": ["^build"]
+    },
+    "db:latest": {
+      "cache": false
+    },
+    "db:rollback": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    }
+  }
+}

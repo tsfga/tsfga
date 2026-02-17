@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**/*.ts", "!src/store/kysely/schema.ts"]
+    "includes": ["**/*.ts", "!**/schema.ts", "!**/dist"]
   },
   "formatter": {
     "enabled": true,
@@ -22,17 +22,6 @@
         "useLiteralKeys": "off"
       },
       "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": ["./*", "../*"],
-                "message": "Use path aliases (src/* or tests/*) instead of relative imports"
-              }
-            ]
-          }
-        },
         "useFilenamingConvention": {
           "level": "error",
           "options": {
