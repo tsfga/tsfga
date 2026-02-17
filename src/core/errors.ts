@@ -48,3 +48,10 @@ export class ConditionEvaluationError extends TsfgaError {
     this.cause = cause;
   }
 }
+
+export class InvalidStoredDataError extends TsfgaError {
+  constructor(table: string, column: string, detail: string) {
+    super(`Invalid data in ${table}.${column}: ${detail}`);
+    this.name = "InvalidStoredDataError";
+  }
+}

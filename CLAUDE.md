@@ -981,6 +981,16 @@ preload = ["./tests/helpers/preload.ts"]
   *within* builder calls (e.g., `onConflict().expression(sql`...`)`).
   Full raw `sql` INSERT/SELECT queries bypass type checking and
   schema validation.
+- **No `as` type assertions in production code.** Use control-flow
+  narrowing (guards, early returns, local const captures) instead.
+  The only acceptable `as` usage is `as const` for literal types.
+- **No loose equality (`==` / `!=`).** Always use strict equality
+  (`===` / `!==`). For nullish checks, use explicit
+  `=== null || === undefined` or `??` / `?.` operators.
+- **Validate JSON from the database at the adapter boundary.** JSON
+  columns return `Json | null` from Kysely. Never cast with `as` to
+  a domain type. Write a validation function that checks the shape
+  and throws `InvalidStoredDataError` on mismatch.
 
 ## References
 

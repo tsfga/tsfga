@@ -46,7 +46,7 @@ export class ContextualTupleStore implements TupleStore {
         t.relation === relation &&
         t.subjectType === subjectType &&
         t.subjectId === subjectId &&
-        t.subjectRelation == null,
+        t.subjectRelation === null,
     );
     if (contextual) return contextual;
 
@@ -69,7 +69,7 @@ export class ContextualTupleStore implements TupleStore {
         t.objectType === objectType &&
         t.objectId === objectId &&
         t.relation === relation &&
-        t.subjectRelation != null,
+        t.subjectRelation !== null,
     );
     const stored = await this.inner.findUsersetTuples(
       objectType,

@@ -3,7 +3,6 @@ import { ContextualTupleStore } from "src/core/contextual-store.ts";
 import type {
   CheckOptions,
   CheckRequest,
-  IntersectionOperand,
   RelationConfig,
 } from "src/core/types.ts";
 import type { TupleStore } from "src/store/interface.ts";
@@ -116,7 +115,8 @@ async function checkBase(
 
   // Step 2: Userset expansion handlers
   for (const userset of usersetTuples) {
-    const relation = userset.subjectRelation as string;
+    if (!userset.subjectRelation) continue;
+    const relation = userset.subjectRelation;
     handlers.push(async () => {
       if (!(await evaluateTupleCondition(store, userset, request.context))) {
         return false;
@@ -153,10 +153,11 @@ async function checkBase(
 
   // Step 4: Computed userset handler
   if (config?.computedUserset) {
+    const computedUserset = config.computedUserset;
     handlers.push(() =>
       check(
         store,
-        { ...request, relation: config.computedUserset as string },
+        { ...request, relation: computedUserset },
         options,
         depth + 1,
       ),
@@ -218,9 +219,12 @@ async function checkIntersection(
   options: CheckOptions,
   depth: number,
 ): Promise<boolean> {
+  const operands = config.intersection;
+  if (!operands) return true;
+
   const handlers: Array<() => Promise<boolean>> = [];
 
-  for (const operand of config.intersection as IntersectionOperand[]) {
+  for (const operand of operands) {
     if (operand.type === "direct") {
       handlers.push(() => checkBase(store, request, config, options, depth));
     } else if (operand.type === "computedUserset") {

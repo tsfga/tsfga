@@ -22,7 +22,7 @@ function coerceValue(
   value: unknown,
   paramType: ConditionParameterType,
 ): unknown {
-  if (value == null) return value;
+  if (value === null || value === undefined) return value;
   if (paramType === "timestamp" && typeof value === "string") {
     return coerceTimestamp({ val: value });
   }

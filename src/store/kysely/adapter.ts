@@ -1,4 +1,5 @@
 import { type Kysely, sql } from "kysely";
+import { InvalidStoredDataError } from "src/core/errors.ts";
 import type {
   AddTupleRequest,
   ConditionDefinition,
@@ -9,7 +10,7 @@ import type {
   Tuple,
 } from "src/core/types.ts";
 import type { TupleStore } from "src/store/interface.ts";
-import type { DB } from "src/store/kysely/schema.ts";
+import type { DB, Json } from "src/store/kysely/schema.ts";
 
 const WILDCARD_SENTINEL = "00000000-0000-0000-0000-000000000000";
 
@@ -85,20 +86,15 @@ export class KyselyTupleStore implements TupleStore {
 
     if (!row) return null;
 
-    const ttu = row.tuple_to_userset as Array<{
-      tupleset: string;
-      computedUserset: string;
-    }> | null;
-
     return {
       objectType: row.object_type,
       relation: row.relation,
       directlyAssignableTypes: row.directly_assignable_types,
       impliedBy: row.implied_by,
       computedUserset: row.computed_userset,
-      tupleToUserset: ttu,
+      tupleToUserset: this.parseTupleToUserset(row.tuple_to_userset),
       excludedBy: row.excluded_by,
-      intersection: row.intersection as IntersectionOperand[] | null,
+      intersection: this.parseIntersection(row.intersection),
       allowsUsersetSubjects: row.allows_userset_subjects,
     };
   }
@@ -117,10 +113,7 @@ export class KyselyTupleStore implements TupleStore {
     return {
       name: row.name,
       expression: row.expression,
-      parameters: row.parameters as Record<
-        string,
-        ConditionParameterType
-      > | null,
+      parameters: this.parseConditionParameters(row.parameters),
     };
   }
 
@@ -306,7 +299,7 @@ export class KyselyTupleStore implements TupleStore {
     subject_id: string;
     subject_relation: string | null;
     condition_name: string | null;
-    condition_context: unknown;
+    condition_context: Json | null;
   }): Tuple {
     return {
       objectType: row.object_type,
@@ -316,7 +309,138 @@ export class KyselyTupleStore implements TupleStore {
       subjectId: row.subject_id === WILDCARD_SENTINEL ? "*" : row.subject_id,
       subjectRelation: row.subject_relation,
       conditionName: row.condition_name,
-      conditionContext: row.condition_context as Record<string, unknown> | null,
+      conditionContext: this.parseConditionContext(row.condition_context),
     };
+  }
+
+  private parseTupleToUserset(
+    value: Json | null,
+  ): Array<{ tupleset: string; computedUserset: string }> | null {
+    if (value === null) return null;
+    if (!Array.isArray(value)) {
+      throw new InvalidStoredDataError(
+        "relation_configs",
+        "tuple_to_userset",
+        "expected array",
+      );
+    }
+    for (const item of value) {
+      if (
+        typeof item !== "object" ||
+        item === null ||
+        Array.isArray(item) ||
+        typeof item["tupleset"] !== "string" ||
+        typeof item["computedUserset"] !== "string"
+      ) {
+        throw new InvalidStoredDataError(
+          "relation_configs",
+          "tuple_to_userset",
+          "each element must have string tupleset and computedUserset",
+        );
+      }
+    }
+    return value as Array<{ tupleset: string; computedUserset: string }>;
+  }
+
+  private parseIntersection(value: Json | null): IntersectionOperand[] | null {
+    if (value === null) return null;
+    if (!Array.isArray(value)) {
+      throw new InvalidStoredDataError(
+        "relation_configs",
+        "intersection",
+        "expected array",
+      );
+    }
+    for (const item of value) {
+      if (typeof item !== "object" || item === null || Array.isArray(item)) {
+        throw new InvalidStoredDataError(
+          "relation_configs",
+          "intersection",
+          "each element must be an object with a type field",
+        );
+      }
+      const type = item["type"];
+      if (type === "direct") {
+        continue;
+      }
+      if (type === "computedUserset") {
+        if (typeof item["relation"] !== "string") {
+          throw new InvalidStoredDataError(
+            "relation_configs",
+            "intersection",
+            "computedUserset operand must have string relation",
+          );
+        }
+        continue;
+      }
+      if (type === "tupleToUserset") {
+        if (
+          typeof item["tupleset"] !== "string" ||
+          typeof item["computedUserset"] !== "string"
+        ) {
+          throw new InvalidStoredDataError(
+            "relation_configs",
+            "intersection",
+            "tupleToUserset operand must have string tupleset and computedUserset",
+          );
+        }
+        continue;
+      }
+      throw new InvalidStoredDataError(
+        "relation_configs",
+        "intersection",
+        `unknown operand type: ${String(type)}`,
+      );
+    }
+    return value as IntersectionOperand[];
+  }
+
+  private parseConditionParameters(
+    value: Json | null,
+  ): Record<string, ConditionParameterType> | null {
+    if (value === null) return null;
+    if (typeof value !== "object" || Array.isArray(value)) {
+      throw new InvalidStoredDataError(
+        "condition_definitions",
+        "parameters",
+        "expected object",
+      );
+    }
+    const validTypes = new Set([
+      "string",
+      "int",
+      "uint",
+      "bool",
+      "double",
+      "duration",
+      "timestamp",
+      "list",
+      "map",
+      "any",
+    ]);
+    for (const [key, val] of Object.entries(value)) {
+      if (typeof val !== "string" || !validTypes.has(val)) {
+        throw new InvalidStoredDataError(
+          "condition_definitions",
+          "parameters",
+          `invalid parameter type for "${key}": ${String(val)}`,
+        );
+      }
+    }
+    return value as Record<string, ConditionParameterType>;
+  }
+
+  private parseConditionContext(
+    value: Json | null,
+  ): Record<string, unknown> | null {
+    if (value === null) return null;
+    if (typeof value !== "object" || Array.isArray(value)) {
+      throw new InvalidStoredDataError(
+        "tuples",
+        "condition_context",
+        "expected object",
+      );
+    }
+    return value as Record<string, unknown>;
   }
 }

@@ -150,6 +150,7 @@ export { evaluateTupleCondition } from "src/core/conditions.ts";
 export {
   ConditionEvaluationError,
   ConditionNotFoundError,
+  InvalidStoredDataError,
   InvalidSubjectTypeError,
   RelationConfigNotFoundError,
   TsfgaError,
