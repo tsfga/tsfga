@@ -22,11 +22,14 @@
     "turbo:test:conformance": "turbo run test --filter=@tsfga/conformance",
     "turbo:test:core": "turbo run test --filter=@tsfga/core",
     "turbo:test:kysely": "turbo run test --filter=@tsfga/kysely",
+    "turbo:test:deno": "turbo run test:deno",
+    "turbo:test:node": "turbo run test:node",
     "version": "changeset version"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.2",
     "@changesets/cli": "2.29.8",
+    "tsx": "4.21.0",
     "turbo": "2.8.9"
   }
 }

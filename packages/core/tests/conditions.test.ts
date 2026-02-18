@@ -88,7 +88,7 @@ describe("evaluateTupleCondition", () => {
   test("throws ConditionNotFoundError for missing condition", async () => {
     const store = new MockTupleStore();
     const tuple = makeTuple({ conditionName: "nonexistent" });
-    expect(evaluateTupleCondition(store, tuple)).rejects.toBeInstanceOf(
+    await expect(evaluateTupleCondition(store, tuple)).rejects.toBeInstanceOf(
       ConditionNotFoundError,
     );
   });
@@ -110,7 +110,7 @@ describe("evaluateTupleCondition", () => {
       expression: "x.nonexistent_method()",
       parameters: {},
     });
-    expect(
+    await expect(
       evaluateTupleCondition(store, tuple, { x: 42 }),
     ).rejects.toBeInstanceOf(ConditionEvaluationError);
   });

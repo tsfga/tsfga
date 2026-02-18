@@ -93,6 +93,13 @@ tsfga/
 │       └── .kysely-codegenrc.json
 │
 ├── tests/
+│   ├── node/                        bun:test shim for Node.js test runner
+│   │   ├── bun-test-shim.mjs       bun:test API via node:test + node:assert
+│   │   ├── loader.mjs              ESM resolve hook: "bun:test" → shim
+│   │   └── register.mjs            Registers loader via node --import
+│   ├── deno/                        bun:test shim for Deno test runner
+│   │   ├── bun-test-shim.ts        bun:test API via @std/testing + @std/expect
+│   │   └── deno.json               Import map: "bun:test" → shim
 │   └── conformance/                 @tsfga/conformance (private)
 │       ├── helpers/
 │       │   ├── conformance.ts       expectConformance() helper
@@ -828,6 +835,8 @@ bun run turbo:test                       # All tests (infra required)
 bun run turbo:test:core                  # Core unit tests (no infra)
 bun run turbo:test:kysely                # Adapter tests (PostgreSQL required)
 bun run turbo:test:conformance           # Conformance tests (PG + OpenFGA)
+bun run turbo:test:node                  # Core tests on Node.js (no infra)
+bun run turbo:test:deno                  # Core tests on Deno (no infra)
 
 # Infrastructure
 bun run infra:setup                      # Start services + run migrations
@@ -868,6 +877,39 @@ bun run db:generate
 
 # 5. Commit the generated schema.ts
 ```
+
+### Cross-Runtime Testing
+
+Test files use `import from "bun:test"` exclusively. To run the same test
+files on Node.js and Deno without modification, each runtime has a shim
+that remaps `"bun:test"` to equivalent testing APIs.
+
+```
+On Bun:   import "bun:test"  →  native Bun resolution
+On Node:  import "bun:test"  →  ESM loader hook  →  tests/node/bun-test-shim.mjs
+On Deno:  import "bun:test"  →  import map        →  tests/deno/bun-test-shim.ts
+```
+
+**Node.js shim** (`tests/node/`): A custom ESM loader intercepts
+`"bun:test"` imports and redirects them to a compatibility shim that
+implements the required API subset using `node:test` + `node:assert`.
+Tests run via:
+`node --import tsx --import ./tests/node/register.mjs --test '<glob>'`.
+TypeScript transpilation is handled by `tsx` (loaded via `--import tsx`),
+and the `register.mjs` file registers the bun:test loader.
+
+**Deno shim** (`tests/deno/`): A `deno.json` import map remaps
+`"bun:test"` to a local shim that re-exports `@std/testing/bdd` and
+`@std/expect`. The import map also maps `@marcbachmann/cel-js` to its
+`npm:` equivalent, and `nodeModulesDir: "auto"` enables resolution from
+the existing `node_modules/`. No transpiler needed (Deno has native
+TypeScript support). Tests run via:
+`deno test --allow-all --config ../../tests/deno/deno.json tests/`.
+
+The shims cover: `describe`, `test`, `beforeEach`, `afterEach`,
+`beforeAll`, `afterAll`, and `expect()` with matchers `toBe`, `toBeNull`,
+`toEqual`, `toHaveLength`, `toBeTruthy`, `toBeInstanceOf`, `not.toBeNull`,
+`not.toBe`, and `rejects.toBeInstanceOf`.
 
 ## Configuration Files
 

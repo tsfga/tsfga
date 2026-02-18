@@ -23,6 +23,14 @@
       "dependsOn": ["^build"],
       "cache": false
     },
+    "test:node": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "test:deno": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
     "db:latest": {
       "cache": false
     },

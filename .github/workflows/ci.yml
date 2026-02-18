@@ -99,6 +99,8 @@ jobs:
 
       - run: node tests/smoke/smoke-test.mjs
 
+      - run: bun run turbo:test:node
+
   test-deno:
     runs-on: ubuntu-latest
     strategy:
@@ -123,3 +125,5 @@ jobs:
       - run: bun run build
 
       - run: deno run --allow-all tests/smoke/smoke-test.mjs
+
+      - run: bun run turbo:test:deno

@@ -1,0 +1,7 @@
+{
+	"imports": {
+		"bun:test": "./bun-test-shim.ts",
+		"@marcbachmann/cel-js": "npm:@marcbachmann/cel-js"
+	},
+	"nodeModulesDir": "auto"
+}

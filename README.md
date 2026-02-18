@@ -116,6 +116,8 @@ bun run turbo:test                     # Run all tests (infra must be running)
 bun run turbo:test:core                # Unit tests only (no infra needed)
 bun run turbo:test:conformance         # Conformance tests (infra required)
 bun run turbo:test:kysely              # Adapter tests (infra required)
+bun run turbo:test:node                # Core tests on Node.js (no infra needed)
+bun run turbo:test:deno                # Core tests on Deno (no infra needed)
 bun run build                          # Build all packages
 bun run tsc                            # Type check all packages
 bun run biome:check                    # Lint + format check (Biome)
