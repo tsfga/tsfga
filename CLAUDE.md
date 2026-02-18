@@ -911,6 +911,14 @@ The shims cover: `describe`, `test`, `beforeEach`, `afterEach`,
 `toEqual`, `toHaveLength`, `toBeTruthy`, `toBeInstanceOf`, `not.toBeNull`,
 `not.toBe`, and `rejects.toBeInstanceOf`.
 
+### Workflow Commands
+
+The `/ship` command automates the full iteration loop from local
+validation through PR creation: format, lint, type check, test, commit,
+push, watch CI, rebase against `upstream/main`, squash fixups, and open
+PR to `emfga/tsfga`. Pass arguments for commit/PR hints:
+`/ship Add list_users support to the check algorithm`
+
 ## Configuration Files
 
 ### `turbo.json`
@@ -937,6 +945,13 @@ or project references — turbo handles dependency ordering).
 Shared lint/format config at root. Ignores `**/schema.ts` (generated) and
 `**/dist/**` (build output). Uses kebab-case filename convention.
 
+## Git Remotes
+
+- **origin** — `git@github.com:lemuelroberto/tsfga.git` (personal fork,
+  push feature branches here)
+- **upstream** — `git@github.com:emfga/tsfga.git` (canonical repo, PR
+  target, rebase against `upstream/main`)
+
 ## Git Commit Messages
 
 - **Never** use conventional commit format (`feat:`, `fix:`, `chore:`, etc.)
@@ -955,6 +970,13 @@ Shared lint/format config at root. Ignores `**/schema.ts` (generated) and
   future renames. Only reference sources that meaningfully informed
   the implementation — not every tangential link. Multiple sources
   use separate `Ref:` lines or a `Refs:` block.
+
+### Commit Hygiene Before PR
+
+Before opening a PR, squash fixup commits (lint fixes, CI fixes, typos)
+into the commit they repair. Keep logically distinct changes as separate
+commits. Use `git reset --soft upstream/main` + recommit to reshape
+history when interactive rebase is not available.
 
 ## Anti-Patterns (DO NOT)
 
