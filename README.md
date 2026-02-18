@@ -27,28 +27,27 @@ TupleStore (interface)
 KyselyTupleStore (adapter)
 ```
 
-The `src/core/` module contains pure logic with no database dependencies. It
-communicates with storage through the `TupleStore` interface, which the Kysely
-adapter implements for PostgreSQL.
+The `@tsfga/core` package contains pure logic with no database dependencies.
+It communicates with storage through the `TupleStore` interface, which the
+`@tsfga/kysely` adapter implements for PostgreSQL.
 
 ## Installation
 
 ```bash
-bun add lemuelroberto/tsfga
-```
+# Core library (check algorithm, types, conditions)
+npm install @tsfga/core
 
-### Peer dependencies
-
-```bash
-bun add kysely pg
+# PostgreSQL adapter (requires Kysely and pg as peer deps)
+npm install @tsfga/kysely kysely pg
 ```
 
 ## Quick start
 
 ```typescript
+import { createTsfga } from "@tsfga/core";
+import { KyselyTupleStore } from "@tsfga/kysely";
 import { Kysely, PostgresDialect } from "kysely";
 import Pool from "pg-pool";
-import { createTsfga, KyselyTupleStore } from "lemuelroberto/tsfga";
 
 const db = new Kysely({
   dialect: new PostgresDialect({ pool: new Pool({ connectionString: "..." }) }),
@@ -111,16 +110,17 @@ const allowed = await fga.check({
 ### Commands
 
 ```bash
-bun install                   # Install dependencies
-bun run infra:setup           # Start services + run migrations
-bun test                      # Run all tests (infra must be running)
-bun test tests/core/          # Unit tests only (no infra needed)
-bun test tests/conformance/   # Conformance tests (infra must be running)
-bun test tests/store/         # Integration tests (infra must be running)
-bun run tsc                   # Type check
-bun run biome:check           # Lint + format check (Biome)
-bun run biome:lint            # Lint only (Biome)
-bun run biome:format          # Auto-format (Biome)
+bun install                            # Install dependencies
+bun run infra:setup                    # Start services + run migrations
+bun run turbo:test                     # Run all tests (infra must be running)
+bun run turbo:test:core                # Unit tests only (no infra needed)
+bun run turbo:test:conformance         # Conformance tests (infra required)
+bun run turbo:test:kysely              # Adapter tests (infra required)
+bun run build                          # Build all packages
+bun run tsc                            # Type check all packages
+bun run biome:check                    # Lint + format check (Biome)
+bun run biome:lint                     # Lint only (Biome)
+bun run biome:format                   # Auto-format (Biome)
 ```
 
 ### Infrastructure

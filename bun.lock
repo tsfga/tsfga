@@ -7,9 +7,7 @@
       "devDependencies": {
         "@biomejs/biome": "2.4.2",
         "@changesets/cli": "2.29.8",
-        "tsup": "8.5.1",
         "turbo": "2.8.9",
-        "typescript": "5.9.3",
       },
     },
     "packages/core": {

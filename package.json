@@ -16,19 +16,17 @@
     "infra:setup": "docker compose up -d --wait && turbo run db:latest",
     "infra:up": "docker compose up -d --wait",
     "release": "turbo run build && changeset publish",
-    "turbo:build": "turbo run build",
+    "build": "turbo run build",
+    "tsc": "turbo run tsc",
+    "turbo:test": "turbo run test",
     "turbo:test:conformance": "turbo run test --filter=@tsfga/conformance",
     "turbo:test:core": "turbo run test --filter=@tsfga/core",
     "turbo:test:kysely": "turbo run test --filter=@tsfga/kysely",
-    "turbo:test": "turbo run test",
-    "turbo:tsc": "turbo run tsc",
     "version": "changeset version"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.2",
     "@changesets/cli": "2.29.8",
-    "turbo": "2.8.9",
-    "tsup": "8.5.1",
-    "typescript": "5.9.3"
+    "turbo": "2.8.9"
   }
 }

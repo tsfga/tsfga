@@ -808,21 +808,20 @@ describe("Model Conformance", () => {
   `@openfga/syntax-transformer`, `kysely`, `pg`, `yaml`
 
 ### Root
-- **Dev:** `@biomejs/biome`, `@changesets/cli`, `turbo`, `tsup`, `typescript`
+- **Dev:** `@biomejs/biome`, `@changesets/cli`, `turbo`
 
 ## Dev Commands
 
 **Important:** Bun hijacks `bun run test` to `bun test` (built-in runner),
-so turbo-delegated scripts use the `turbo:` prefix. Use `bun run turbo:*`
-for turbo tasks.
+so test scripts use the `turbo:` prefix.
 
 ```bash
 # Workspace management
 bun install                              # Install all workspace dependencies
 
 # Build & type check (via turbo)
-bun run turbo:build                      # Build all packages
-bun run turbo:tsc                        # Type check all packages
+bun run build                            # Build all packages
+bun run tsc                              # Type check all packages
 
 # Test (via turbo)
 bun run turbo:test                       # All tests (infra required)
