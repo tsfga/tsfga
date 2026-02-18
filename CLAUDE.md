@@ -1019,6 +1019,10 @@ history when interactive rebase is not available.
 - **No cross-package relative imports.** Use `@tsfga/core` or
   `@tsfga/kysely` package names for cross-package imports. Relative
   imports (`../`) are only for within the same package.
+- **Keep lines under 80 columns.** Wrap code, comments, YAML,
+  and markdown at ~80 characters. Exceptions: URLs, import paths,
+  and other content that becomes harder to maintain when broken
+  across lines.
 
 ## References
 

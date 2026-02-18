@@ -1,0 +1,52 @@
+name: Preview
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    if: github.repository == 'emfga/tsfga'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2.1.2
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run build
+
+      # pkg-pr-new does not resolve workspace:* protocol
+      # references. Replace them with actual version numbers
+      # so the published tarballs have valid dependency specs.
+      - name: Resolve workspace protocol
+        run: |
+          for pkg in packages/*/package.json; do
+            jq '
+              def resolve_ws:
+                to_entries | map(
+                  if (.value | test("^workspace:")) then
+                    .value = (.value | ltrimstr("workspace:"))
+                  else . end
+                ) | from_entries;
+              if .dependencies then .dependencies |= resolve_ws else . end |
+              if .peerDependencies then .peerDependencies |= resolve_ws else . end
+            ' "$pkg" > "${pkg}.tmp" && mv "${pkg}.tmp" "$pkg"
+          done
+
+      - name: Publish preview packages
+        run: >-
+          bunx pkg-pr-new@0.0.61 publish
+          --comment=update
+          --template './examples/node-kysely'
+          './packages/core'
+          './packages/kysely'
