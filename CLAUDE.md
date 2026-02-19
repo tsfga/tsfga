@@ -1076,6 +1076,20 @@ history when interactive rebase is not available.
   and other content that becomes harder to maintain when broken
   across lines.
 
+## Package README files
+
+- Every package under `packages/*` and `tests/*` must
+  have a `README.md`
+- When creating a new package, include a README following
+  the structure of existing package READMEs
+- When making changes that affect a package's public API,
+  behavior, or usage, update its README to reflect those
+  changes
+- Package READMEs must mention the parent project and
+  link to the root README
+- Published packages must include installation and
+  quick-start sections
+
 ## References
 
 - OpenFGA docs: https://openfga.dev/docs/modeling/getting-started
