@@ -878,8 +878,12 @@ See `RELEASING.md` for the full step-by-step process.
 
 **Version bumps** happen in PRs before release:
 - `scripts/bump.sh <package-dir> [patch|minor|major]`
-- Changesets track what changed for PR review; the
-  `changeset-check` workflow enforces their presence
+
+**Changesets** are required in every PR. The `changeset-check`
+workflow fails PRs without one. Create with `bun run changeset`
+or write `.changeset/<name>.md` manually. The changeset body
+becomes release notes — write it for end users. Bump types:
+`major` (breaking), `minor` (features), `patch` (fixes/tooling).
 
 **Release notes** (`scripts/release-notes.sh`):
 - Categorizes commits by PR labels: `breaking`, `feature`,

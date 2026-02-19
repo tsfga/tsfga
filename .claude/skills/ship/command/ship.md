@@ -33,7 +33,30 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
 
 ---
 
-## Phase 2 — Commit
+## Phase 2 — Changeset
+
+The `changeset-check` workflow requires every PR to include a
+changeset file. Always create one.
+
+1. Check if any `.changeset/*.md` files exist (excluding README.md)
+2. If none exist, create a `.changeset/<descriptive-name>.md` file:
+   - Front matter lists only the affected package(s) with bump type
+   - Body describes the change (used in release notes)
+   - Example:
+     ```
+     ---
+     "@tsfga/core": minor
+     ---
+
+     Add list_users support to the check algorithm
+     ```
+3. Bump types: `major` for breaking changes, `minor` for new
+   features, `patch` for bug fixes. Use `patch` for tooling,
+   CI, and docs changes.
+
+---
+
+## Phase 3 — Commit
 
 1. `git status` — see all changed/untracked files
 2. `git diff` — review unstaged changes
@@ -50,7 +73,7 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
 
 ---
 
-## Phase 3 — Push + CI Watch
+## Phase 4 — Push + CI Watch
 
 1. Check if the current branch tracks a remote:
    `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`
@@ -66,7 +89,7 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
 
 ---
 
-## Phase 4 — Rebase + Clean Up
+## Phase 5 — Rebase + Clean Up
 
 1. `git fetch upstream`
 2. `git rebase upstream/main`
@@ -91,7 +114,7 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
 
 ---
 
-## Phase 5 — Open PR
+## Phase 6 — Open PR
 
 1. `gh pr create --repo emfga/tsfga --base main --title "..." --body "$(cat <<'EOF'
    ## Summary
