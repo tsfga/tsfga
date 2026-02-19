@@ -17,9 +17,9 @@ scripts/bump.sh packages/core minor   # or patch / major
 scripts/bump.sh packages/kysely minor
 ```
 
-Commit the version bump, open a PR, and merge. The
-`changeset-check` workflow requires a changeset file in
-every PR — create one with `bun run changeset`.
+Commit the version bump, open a PR, and merge. Optionally
+add a changeset (`bun run changeset`) to document the
+change for release notes.
 
 ## 2. Trigger the release workflow
 
@@ -49,6 +49,25 @@ Check the GitHub release was created with the correct tag
 The workflow generates release notes from git history and
 PR labels. Edit the GitHub release if custom notes are
 needed.
+
+### Using changesets for release notes
+
+When preparing a release, maintainers can create a
+changeset to document user-facing changes:
+
+```bash
+bun run changeset
+```
+
+The changeset body becomes part of release notes — write
+it for end users. Bump types: `major` (breaking), `minor`
+(features), `patch` (fixes/tooling). Changesets are not
+required — they are a convenience for structuring release
+notes.
+
+Bot PRs (Renovate, Dependabot) and external contributor
+PRs do not need changesets. Maintainers add them when
+the change warrants a release note entry.
 
 ## How it works
 
