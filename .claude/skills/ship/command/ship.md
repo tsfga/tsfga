@@ -56,13 +56,20 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
    `git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null`
 2. If no upstream tracking: `git push -u origin HEAD`
    Otherwise: `git push`
-3. Watch CI: `gh run watch --exit-status`
-   This blocks until the workflow completes.
-4. On CI failure:
-   a. `gh run view --log-failed` to see what failed
+3. Trigger CI manually on origin:
+   `gh workflow run CI --repo <origin-owner>/tsfga --ref <branch>`
+   Get the origin owner from:
+   `gh repo view --json owner -q .owner.login`
+4. Wait a few seconds for the run to register, then find it:
+   `gh run list --workflow=CI --branch=<branch> --repo <origin-owner>/tsfga --limit 1 --json databaseId -q '.[0].databaseId'`
+5. Watch CI:
+   `gh run watch <run-id> --repo <origin-owner>/tsfga --exit-status`
+6. On CI failure:
+   a. `gh run view <run-id> --repo <origin-owner>/tsfga --log-failed`
+      to see what failed
    b. Diagnose and fix the issue
-   c. Loop back to **Phase 1** (re-validate everything before committing
-      the fix)
+   c. Loop back to **Phase 1** (re-validate everything before
+      committing the fix)
 
 ---
 
@@ -86,7 +93,9 @@ Do NOT proceed to Phase 2 until all 4 steps pass cleanly.
       project conventions
    d. If there is only one logical change, create a single commit
 6. `git push --force-with-lease`
-7. Watch CI again: `gh run watch --exit-status`
+7. Trigger CI manually on origin (same as Phase 3 steps 3-5):
+   `gh workflow run CI --repo <origin-owner>/tsfga --ref <branch>`
+   Then find the run and watch it with `gh run watch`.
    - On failure, fix and loop back to Phase 1
 
 ---

@@ -859,6 +859,20 @@ bun run version                          # Apply changesets to versions
 bun run release                          # Build + publish
 ```
 
+### CI Workflow (`.github/workflows/ci.yml`)
+
+Triggers: `pull_request` (main), `workflow_dispatch`.
+
+No `push` trigger — on upstream, `pull_request` covers PRs;
+on forks, the `/ship` command triggers CI manually via
+`gh workflow run`. This avoids duplicate runs on upstream
+and gives forks explicit control over CI.
+
+### Preview Workflow (`.github/workflows/preview.yml`)
+
+Publishes preview packages via `pkg-pr-new` on push and PR.
+Restricted to `emfga/tsfga` (`if: github.repository`).
+
 ### Releasing
 
 Each package is versioned independently. A manually triggered
