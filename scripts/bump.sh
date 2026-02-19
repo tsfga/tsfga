@@ -43,4 +43,13 @@ jq --arg v "$next" '.version = $v' \
   "$pkg_json" > "${pkg_json}.tmp"
 mv "${pkg_json}.tmp" "$pkg_json"
 
+lockfile="bun.lock"
+if [ -f "$lockfile" ]; then
+  dir_escaped="${dir//\//\\/}"
+  sed "/\"${dir_escaped}\": {/,/\"version\":/ {
+    s/\"version\": \"[^\"]*\"/\"version\": \"$next\"/
+  }" "$lockfile" > "${lockfile}.tmp"
+  mv "${lockfile}.tmp" "$lockfile"
+fi
+
 echo "${current} → ${next}"
